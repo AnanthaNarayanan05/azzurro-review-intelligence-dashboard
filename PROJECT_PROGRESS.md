@@ -499,3 +499,12 @@ test. **The app is not live and no URL exists yet.**
 
 **Next steps:** the owner follows `docs/GO_LIVE.md` and sends me the Vercel and Render addresses; I run the smoke test in
 `docs/DEPLOYMENT.md`, record the URL, date and results here and in the README, and commit.
+
+## 2026-11-24 – Final decision: local-only (no hosting)
+
+The owner decided **not to host** the app, after having asked for a live URL and starting the Neon sign-in. No account was
+created, nothing was deployed, no secrets were handled. `render.yaml` and `docs/GO_LIVE.md` stay in the repository as an optional,
+unused path (the API start command was checked locally with production settings). The project is delivered as a local-only
+handover: run it with the README steps (verified from a fresh clone); `docs/HANDOVER.md` has the demo script and honest limits.
+Sharing the work: the repository is private (`AnanthaNarayanan05/azzurro-review-intelligence-dashboard`), so a reader needs to be added
+as a collaborator on GitHub. Open items are unchanged: real data, a labelled sample for accuracy, LLM adapter (not built).

@@ -4,9 +4,8 @@ An evidence-based review analytics platform that turns guest reviews for four ho
 measurable business intelligence: satisfaction KPIs, property comparison, aspect-level strengths and
 complaints, trends, and operational recommendations linked to the reviews that support them.
 
-> **Project status: all eight phases done; a public demo is being set up (project owner asked for a live URL on 2026-11-24).**
-> Deployment settings are ready (`render.yaml`, `docs/GO_LIVE.md`); **it is not live until the owner has created the free
-> accounts and the smoke test in `docs/DEPLOYMENT.md` has passed.** Working now: CSV/XLSX import with preview, mapping,
+> **Project status: all eight phases done, as a local-only project (the owner decided not to host it, 2026-11-24).**
+> Optional hosting files exist (`render.yaml`, `docs/GO_LIVE.md`) but were never used; nothing is deployed. Working now: CSV/XLSX import with preview, mapping,
 > validation, duplicate handling and undo; property management; labelled synthetic demo data; the analytics
 > engine (sentiment, aspect mentions, comparison and trend statistics); and the dashboard pages that show it on
 > live data: Overview, Properties (list and detail), Comparison and a Reviews explorer, driven by URL-synced
@@ -71,7 +70,7 @@ Charts are hand-written SVG/CSS (no chart library; each has a table view). Plann
 | [Testing plan](docs/TESTING_PLAN.md) | Unit, API, analytics validation, E2E |
 | [Risk register](docs/RISK_REGISTER.md) | Risks and mitigations |
 | [Deployment](docs/DEPLOYMENT.md) | Setup, PostgreSQL testing, hosting runbook |
-| [Go live](docs/GO_LIVE.md) | Click-by-click steps for the free public demo (Neon, Render, Vercel) |
+| [Go live](docs/GO_LIVE.md) | Optional, unused: steps for a free public demo (Neon, Render, Vercel) |
 | [Handover](docs/HANDOVER.md) | Plain-language walkthrough, demo script, what is and is not proven, likely questions |
 | [Labelling guide](docs/LABELLING_GUIDE.md) | How to label a sample so accuracy can be measured |
 | [Project progress](PROJECT_PROGRESS.md) | Current phase, files, tests, decisions, exact next steps |
@@ -137,9 +136,9 @@ backend/scripts/  generate_sample_files.py (rebuilds data/sample/synthetic_revie
 
 ## Deployment
 
-**Not live yet.** The owner chose free hosts (Vercel web, Render API, Neon PostgreSQL), a fully interactive demo with
-synthetic data only. The step-by-step guide is [docs/GO_LIVE.md](docs/GO_LIVE.md); the runbook and plan limits are in
-[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). The live address will be recorded here once the smoke test has passed.
+**Not deployed, by the owner's decision.** Run it locally (above). If hosting is ever wanted, the optional guide is
+[docs/GO_LIVE.md](docs/GO_LIVE.md) (Vercel, Render, Neon free plans) and the runbook and plan limits are in
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Screenshots of every page (synthetic data) are in `docs/screenshots/`.
 Screenshots (synthetic data) are in `docs/screenshots/`.
 
 ## Known limitations

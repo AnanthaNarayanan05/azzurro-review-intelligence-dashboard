@@ -1,9 +1,8 @@
 # Handover and walkthrough
 
 For the person who will run, present or defend this project. Plain language first; the other documents hold the detail.
-Status at the end of Phase 8 (2026-11-24): everything below works on a local machine. The owner then asked for a public
-demo; the deploy files and steps are ready (`docs/GO_LIVE.md`) but **nothing is hosted until the accounts are created and the
-smoke test has passed**. The accuracy of the sentiment and aspect methods has **not** been measured
+Status at the end of Phase 8 (2026-11-24): everything below works on a local machine. The owner decided **not to host** it
+(2026-11-24), so nothing is hosted; optional deploy files and steps exist (`docs/GO_LIVE.md`) but were never used. The accuracy of the sentiment and aspect methods has **not** been measured
 (see "What is and is not proven").
 
 ## 1. What it is, in one minute
@@ -91,7 +90,7 @@ Screenshots of these pages (synthetic data) are in `docs/screenshots/`.
 | Works on PostgreSQL | All 334 tests pass on PostgreSQL |
 | **Sentiment and topic detection are accurate** | **NOT measured.** The tool exists; it needs a person to label ~150-200 real reviews (`docs/LABELLING_GUIDE.md`) |
 | The insights are useful for the real hotels | **NOT assessed**: no real data has been used |
-| Hosted deployment works | **Not yet.** Waiting for the owner's accounts (`docs/GO_LIVE.md`); the API start command was checked locally with production settings |
+| Hosted deployment works | **Not done, by the owner's decision.** The API start command was checked locally with production settings; the rest is untested |
 | An AI text generator writes anything | **No.** No LLM is used or built |
 
 ## 6. Questions you may be asked, and honest answers
@@ -135,7 +134,7 @@ Screenshots of these pages (synthetic data) are in `docs/screenshots/`.
 
 1. The real review export (format, columns), if genuine data should be shown. Until then every demonstration uses synthetic data.
 2. A person to label ~150-200 reviews so accuracy can be measured (`docs/LABELLING_GUIDE.md`).
-3. Create the free Neon, Render and Vercel accounts and follow `docs/GO_LIVE.md` (decided: public, fully interactive, synthetic data only).
+3. Only if hosting is wanted later: follow `docs/GO_LIVE.md`. Decided for now: local only.
 4. Whether an AI-written narrative layer is wanted. It would need a provider choice and cost approval, and it must pass the
    same grounding validator.
 5. The assessment deadline, so remaining work can be prioritised.

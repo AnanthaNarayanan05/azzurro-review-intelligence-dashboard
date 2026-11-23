@@ -1,9 +1,9 @@
 # Deployment
 
 Status: **Local setup verified (also from a fresh clone of the repository). PostgreSQL compatibility verified locally.
-Hosted deployment is NOT done yet.** The owner first chose local-only, then asked for a live demo URL (2026-11-24) and
-chose free hosts with a fully interactive synthetic-data demo. Deployment files are ready (`render.yaml`,
-`docs/GO_LIVE.md`); none of the hosted steps has been executed.
+Hosted deployment is NOT done, by the owner's final decision (2026-11-24).** The owner briefly asked for a live demo,
+chose free hosts, then decided not to host. The deployment files (`render.yaml`, `docs/GO_LIVE.md`) are kept as an optional,
+unused option; none of the hosted steps has been executed and no accounts were created.
 
 ## Environment requirements
 
