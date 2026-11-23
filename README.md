@@ -4,7 +4,7 @@ An evidence-based review analytics platform that turns guest reviews for four ho
 measurable business intelligence: satisfaction KPIs, property comparison, aspect-level strengths and
 complaints, trends, and operational recommendations linked to the reviews that support them.
 
-> **Project status: Phase 7 (testing) complete except what needs real data.** Working now: CSV/XLSX import with preview, mapping,
+> **Project status: Phase 8 prepared: handover documents and PostgreSQL checks done; hosting waits for the owner's decision.** Working now: CSV/XLSX import with preview, mapping,
 > validation, duplicate handling and undo; property management; labelled synthetic demo data; the analytics
 > engine (sentiment, aspect mentions, comparison and trend statistics); and the dashboard pages that show it on
 > live data: Overview, Properties (list and detail), Comparison and a Reviews explorer, driven by URL-synced
@@ -68,7 +68,9 @@ Charts are hand-written SVG/CSS (no chart library; each has a table view). Plann
 | [Roadmap](docs/DEVELOPMENT_ROADMAP.md) | Phases, milestones, completion criteria |
 | [Testing plan](docs/TESTING_PLAN.md) | Unit, API, analytics validation, E2E |
 | [Risk register](docs/RISK_REGISTER.md) | Risks and mitigations |
-| [Deployment](docs/DEPLOYMENT.md) | Setup and hosting (planned) |
+| [Deployment](docs/DEPLOYMENT.md) | Setup, PostgreSQL testing, hosting runbook (not yet deployed) |
+| [Handover](docs/HANDOVER.md) | Plain-language walkthrough, demo script, what is and is not proven, likely questions |
+| [Labelling guide](docs/LABELLING_GUIDE.md) | How to label a sample so accuracy can be measured |
 | [Project progress](PROJECT_PROGRESS.md) | Current phase, files, tests, decisions, exact next steps |
 | [Changelog](CHANGELOG.md) | What changed in each phase |
 
@@ -102,7 +104,7 @@ Application Control workaround) are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 ## Testing
 
 ```powershell
-# from backend/  – 330 tests: API, errors, config, database integrity, ingestion, NLP, analysis runs, analytics, review explorer, insights, evaluation metrics
+# from backend/  – 334 tests (also runnable on PostgreSQL, see docs/DEPLOYMENT.md): API, errors, config, database integrity, ingestion, NLP, analysis runs, analytics, review explorer, insights, evaluation metrics
 .venv\Scripts\python.exe -m pytest
 # from frontend/ – 94 tests: API client, status UI, navigation, import wizard, analysis card, filters, charts, dashboard pages, insights
 npm test
@@ -132,7 +134,9 @@ backend/scripts/  generate_sample_files.py (rebuilds data/sample/synthetic_revie
 
 ## Deployment
 
-Not deployed yet (Phase 8). See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+**Not deployed.** The app runs locally and has been tested against PostgreSQL; the hosting runbook, limits of the
+candidate free plans and the decisions needed from the project owner are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+Screenshots (synthetic data) are in `docs/screenshots/`.
 
 ## Known limitations
 

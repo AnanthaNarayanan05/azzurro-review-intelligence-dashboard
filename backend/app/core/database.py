@@ -20,7 +20,9 @@ def build_engine(database_url: str) -> Engine:
         if url.database and url.database != ":memory:":
             Path(url.database).parent.mkdir(parents=True, exist_ok=True)
 
-    engine = create_engine(database_url, connect_args=connect_args)
+    # pool_pre_ping: hosted PostgreSQL (especially serverless plans) drops idle connections;
+    # test each one before use so the first request after a quiet period does not fail.
+    engine = create_engine(database_url, connect_args=connect_args, pool_pre_ping=True)
 
     if url.get_backend_name() == "sqlite":
 

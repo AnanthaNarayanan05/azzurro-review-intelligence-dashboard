@@ -56,6 +56,12 @@ Status: Phase 7 done for everything that does not need real data; model accuracy
 - Model evaluation: the **tooling is built and tested but no accuracy has been measured**, because it needs a human-labelled sample of real reviews and none has been supplied (see section 5, `docs/LABELLING_GUIDE.md`, and `docs/AI_ANALYTICS.md` section 7).
 - **Not covered, not claimed:** real-data import and any accuracy figure; browsers other than Chrome; a screen-reader pass and a full keyboard-only walk-through (axe cannot judge these; only automated rules were run); visual regression; PostgreSQL; load from many simultaneous users.
 
+**Implemented (Phase 8):**
+- **Backend suite on PostgreSQL:** `TEST_DATABASE_URL` points the same fixtures at an empty disposable PostgreSQL database (wiped per test, real migrations). **All 334 tests pass on PostgreSQL and on SQLite** (run 2026-11-24). The first PostgreSQL run exposed two test assumptions (the backend name; an over-long label raising a different error type), fixed in the tests; no application defect was found. `normalise_database_url` (4 new tests) completes `postgres://` and `postgresql://` URLs to the psycopg driver.
+- **Benchmark on PostgreSQL** (local server): 49,815 reviews, slowest endpoint 0.45 s; numbers in `docs/DEPLOYMENT.md`.
+- Screenshots of every page on synthetic data (`frontend/scripts/screenshots.mjs`, `docs/screenshots/`).
+- **Not covered, not claimed:** any hosted deployment or live smoke test; a remote managed PostgreSQL (network latency); memory use under load on a small host plan; PostgreSQL in the browser tests (those still use SQLite).
+
 ## 1. Backend unit tests (pytest)
 
 | Area | Examples |

@@ -12,6 +12,15 @@ REPO_ROOT = BACKEND_DIR.parent
 DEFAULT_SQLITE_PATH = REPO_ROOT / "data" / "processed" / "azzurro.db"
 
 
+def normalise_database_url(url: str) -> str:
+    """Hosts hand out `postgres://...` or `postgresql://...`; SQLAlchemy needs the driver named
+    (`postgresql+psycopg://`), so complete the scheme. Anything else is returned unchanged."""
+    for scheme in ("postgres://", "postgresql://"):
+        if url.startswith(scheme):
+            return "postgresql+psycopg://" + url[len(scheme) :]
+    return url
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=REPO_ROOT / ".env",
@@ -58,7 +67,7 @@ class Settings(BaseSettings):
     @property
     def resolved_database_url(self) -> str:
         if self.database_url:
-            return self.database_url
+            return normalise_database_url(self.database_url)
         return f"sqlite:///{DEFAULT_SQLITE_PATH.as_posix()}"
 
     @property

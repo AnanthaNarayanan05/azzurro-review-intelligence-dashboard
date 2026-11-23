@@ -145,7 +145,8 @@ def test_sentiment_label_must_be_controlled_value(db_session: Session) -> None:
             review_id=review.id,
             analysis_run_id=run.id,
             segment="overall",
-            label="very_happy",
+            # short enough to fit the column, so the CHECK constraint (not the length) rejects it
+            label="unhappy",
             score=Decimal("0.5"),
             model_name="vader",
         )

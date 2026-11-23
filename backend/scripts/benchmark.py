@@ -53,10 +53,18 @@ def main() -> int:
     parser.add_argument(
         "--repeats", type=int, default=5, help="runs per endpoint (median reported)"
     )
+    parser.add_argument(
+        "--database-url",
+        default="",
+        help="an EMPTY, disposable PostgreSQL database to measure instead of SQLite; its public "
+        "schema is wiped first, so never point it at data you want to keep",
+    )
     args = parser.parse_args()
 
     workdir = Path(tempfile.mkdtemp(prefix="azzurro-bench-"))
-    os.environ["DATABASE_URL"] = f"sqlite:///{(workdir / 'bench.db').as_posix()}"
+    os.environ["DATABASE_URL"] = (
+        args.database_url or f"sqlite:///{(workdir / 'bench.db').as_posix()}"
+    )
     os.environ["UPLOAD_DIR"] = str(workdir / "uploads")
     os.environ["MAX_IMPORT_ROWS"] = str(max(args.reviews, 100000))
     os.environ["APP_ENV"] = "test"
@@ -64,9 +72,9 @@ def main() -> int:
     from alembic import command
     from alembic.config import Config
     from fastapi.testclient import TestClient
-    from sqlalchemy import func, select
+    from sqlalchemy import create_engine, func, select, text
 
-    from app.core.config import get_settings
+    from app.core.config import get_settings, normalise_database_url
     from app.core.database import SessionLocal
     from app.main import create_app
     from app.models import Property, Review
@@ -80,12 +88,20 @@ def main() -> int:
     backend_dir = Path(__file__).resolve().parents[1]
     config = Config(str(backend_dir / "alembic.ini"))
     config.set_main_option("script_location", str(backend_dir / "migrations"))
-    config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+    database_url = normalise_database_url(os.environ["DATABASE_URL"])
+    if database_url.startswith("postgresql"):
+        reset = create_engine(database_url, isolation_level="AUTOCOMMIT")
+        with reset.connect() as connection:
+            connection.execute(text("DROP SCHEMA public CASCADE"))
+            connection.execute(text("CREATE SCHEMA public"))
+        reset.dispose()
+    config.set_main_option("sqlalchemy.url", database_url)
     command.upgrade(config, "head")
 
     settings = get_settings()
     results: list[tuple[str, float]] = []
-    print(f"Benchmark: {args.reviews:,} synthetic reviews (temporary database in {workdir})")
+    backend_name = "PostgreSQL" if database_url.startswith("postgresql") else "SQLite"
+    print(f"Benchmark: {args.reviews:,} synthetic reviews on {backend_name} (workdir {workdir})")
 
     data = timed("generate CSV", lambda: build_csv(args.reviews), results)
     print(f"  CSV size: {len(data) / 1_000_000:.1f} MB")

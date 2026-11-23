@@ -8,3 +8,4 @@ openpyxl==3.1.5
 python-multipart==0.0.34
 vaderSentiment==3.3.2
 langdetect==1.0.9
+psycopg[binary]==3.3.9  # PostgreSQL driver (hosted database); SQLite needs no driver

@@ -409,3 +409,52 @@ LLM provider and cost (only if wording by an LLM is wanted), assessment deadline
 2. Phase 8 (deployment and handover): decide hosting (check current free-tier limits and cost with the owner first),
    PostgreSQL and re-run the test suite and benchmark against it, environment configuration, deploy, verify live, handover docs.
 3. Before any public release: a manual keyboard and screen-reader pass.
+
+## 2026-11-24 – Phase 8: Deployment and handover (prepared; live deployment waiting for the owner)
+
+**Completed**
+- **PostgreSQL verification.** Started a throwaway local PostgreSQL (`pgserver` package in a separate virtual environment) and
+  ran the whole backend suite against it through the new `TEST_DATABASE_URL` setting in `tests/conftest.py` (database wiped
+  per test, real migrations). All four migrations apply. First run: 328 of 330 passed; the two failures were test assumptions
+  (health test asserted `sqlite`; a test used a label too long for its column so PostgreSQL raised a different error type).
+  Fixed the tests. **Result: all 334 tests pass on PostgreSQL and on SQLite.**
+- **Production configuration:** `postgres://` / `postgresql://` URLs are completed to `postgresql+psycopg://`
+  (`normalise_database_url`, 4 tests); `psycopg[binary]==3.3.9` in `requirements.txt`; `pool_pre_ping=True` on the engine.
+- **PostgreSQL benchmark** (`scripts.benchmark --database-url`): 10,000 reviews: import 2.5 s, analysis 11.3 s, slowest endpoint
+  0.08 s. 49,815 reviews: import 13.2 s, analysis 60.2 s, slowest endpoint 0.45 s (text search), overview 0.42 s, insights 4.1 s.
+  Local server, so no network latency.
+- **Hosting research** (2026-11-24, vendor pages and third-party summaries; figures to be verified before choosing):
+  Vercel Hobby is personal / non-commercial only; Render free web service sleeps after 15 minutes idle, 750 instance hours a
+  month, reportedly 512 MB; Neon free has 1 GB storage and 100 compute-hours per project. Recorded in `docs/DEPLOYMENT.md`.
+- **Docs:** `docs/HANDOVER.md` (new), `docs/DEPLOYMENT.md` (PostgreSQL testing, runbook, configuration table, constraints,
+  smoke-test checklist, decisions needed), screenshots in `docs/screenshots/` with `frontend/scripts/screenshots.mjs`,
+  README, ROADMAP, TESTING_PLAN, RISK_REGISTER (R17 mitigated; R37, R38 new), CHANGELOG.
+
+**Database changes:** none. **API changes:** none.
+
+**Tests run (2026-11-24):** backend 334 passed on SQLite and 334 on PostgreSQL; `ruff check` and `ruff format --check` clean;
+frontend and browser tests unchanged from Phase 7 (a frontend file was not touched in Phase 8 apart from a screenshot script).
+
+**Nothing was deployed, signed up for or paid for.** Deploying needs accounts (and possibly a card on file) and decisions on
+access control, which are the owner's to make.
+
+**Known limitations / bugs**
+- No live deployment, so there is no live smoke test; do not claim one until `docs/DEPLOYMENT.md`'s checklist has been run.
+- A hosted copy has no login (R37); free plans sleep and require a single API instance (R38).
+- Remote managed PostgreSQL (network latency) and memory use under load on a small host are untested.
+- Carried over: accuracy unmeasured (R33), no real data, no LLM adapter, Chrome-only browser tests, screenshots show the Next.js
+  development badge in the corner because they were taken from the development server.
+
+**Decisions**
+- Stop at the owner's decision point rather than create accounts or choose paid or card-requiring services on their behalf.
+- PostgreSQL test mode is opt-in through an environment variable and wipes the target database, so it is documented loudly.
+
+**Open questions for the project owner:** which hosts (or local-only), whether a free account or card is acceptable, public or
+private access and whether a login or read-only mode is needed, whether genuine data may ever be hosted; plus the earlier
+ones: the real dataset, a human-labelled sample, LLM provider and cost, assessment deadline.
+
+**Next steps**
+1. Owner decides on hosting; then create the database, deploy the API (release step `alembic upgrade head`) and the web app,
+   run the smoke test in `docs/DEPLOYMENT.md`, and record URLs, date and results here.
+2. If real data arrives: import, label a sample, run `scripts.evaluate_models`, write the figures into `docs/AI_ANALYTICS.md` section 7.
+3. Before any public use: access control, and a manual keyboard and screen-reader pass.

@@ -14,7 +14,10 @@ def test_health_reports_ok_with_database(client: TestClient) -> None:
     data = response.json()["data"]
     assert data["status"] == "ok"
     assert data["database"] == "ok"
-    assert data["database_backend"] == "sqlite"
+    assert data["database_backend"] in {
+        "sqlite",
+        "postgresql",
+    }  # postgresql when TEST_DATABASE_URL is set
     assert data["sentiment_engine"] == "vader"
     assert isinstance(data["llm_enabled"], bool)
 

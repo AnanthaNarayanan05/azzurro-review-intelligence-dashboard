@@ -2,6 +2,26 @@
 
 All notable changes, newest first. Dates are when the work was completed.
 
+## Phase 8 - Deployment and handover, prepared (2026-11-24)
+
+**Not deployed:** the live deployment waits for the project owner's hosting decisions.
+
+### Added
+- **PostgreSQL support verified:** `psycopg[binary]` added to `requirements.txt`; `postgres://` / `postgresql://` URLs are
+  completed to the psycopg driver; connections are health-checked before use (`pool_pre_ping`) because hosted databases
+  drop idle connections.
+- `TEST_DATABASE_URL` runs the whole test suite on an empty disposable PostgreSQL database; all 334 tests pass on both
+  PostgreSQL and SQLite. `scripts.benchmark --database-url` measures PostgreSQL (0.45 s slowest endpoint at ~50,000 reviews).
+- `docs/HANDOVER.md` (plain-language guide, demo script, what is and is not proven, likely questions), the hosting
+  runbook with the candidate free plans' limits in `docs/DEPLOYMENT.md`, and screenshots of every page on synthetic data
+  (`frontend/scripts/screenshots.mjs`, `docs/screenshots/`).
+
+### Changed
+- Two tests no longer assume SQLite (the health backend name; a label short enough to reach the CHECK constraint).
+
+### Known issues recorded (see `docs/RISK_REGISTER.md` R37-R38)
+- No login on a hosted copy; free API plans sleep and run one instance; a remote managed PostgreSQL has not been tried.
+
 ## Phase 7 - Testing and optimisation (2026-11-24)
 
 ### Added

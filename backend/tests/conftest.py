@@ -1,5 +1,6 @@
 """Test fixtures: each test gets a fresh SQLite database built by the real Alembic migrations."""
 
+import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -7,7 +8,7 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
-from sqlalchemy import Engine
+from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import Settings, get_settings
@@ -24,9 +25,23 @@ def run_migrations(database_url: str) -> None:
     command.upgrade(config, "head")
 
 
+def _reset_postgres(url: str) -> None:
+    """Empty the public schema so every test starts from the real migrations on a clean database."""
+    reset_engine = create_engine(url, isolation_level="AUTOCOMMIT")
+    with reset_engine.connect() as connection:
+        connection.execute(text("DROP SCHEMA public CASCADE"))
+        connection.execute(text("CREATE SCHEMA public"))
+    reset_engine.dispose()
+
+
 @pytest.fixture()
 def engine(tmp_path: Path) -> Iterator[Engine]:
-    url = f"sqlite:///{(tmp_path / 'test.db').as_posix()}"
+    # By default every test uses a throwaway SQLite file. Setting TEST_DATABASE_URL to the URL of
+    # an EMPTY, disposable PostgreSQL database runs the same tests against PostgreSQL
+    # (docs/DEPLOYMENT.md). It is wiped before each test: never point it at data you want to keep.
+    url = os.environ.get("TEST_DATABASE_URL") or f"sqlite:///{(tmp_path / 'test.db').as_posix()}"
+    if url.startswith("postgresql"):
+        _reset_postgres(url)
     run_migrations(url)
     test_engine = build_engine(url)
     yield test_engine

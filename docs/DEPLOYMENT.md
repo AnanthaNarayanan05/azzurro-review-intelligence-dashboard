@@ -1,7 +1,7 @@
 # Deployment
 
-Status: **Local development setup verified (Phase 2, 2026-11-23). Hosted deployment not done yet**
-(planned for Phase 8; nothing below the "Planned hosted deployment" heading has been executed).
+Status: **Local setup verified. PostgreSQL compatibility verified locally (Phase 8). Hosted deployment is prepared but
+NOT done: it waits for the project owner's hosting decisions** (see "Hosted deployment" below).
 
 ## Environment requirements
 
@@ -82,13 +82,110 @@ npm run build
 - `python -m alembic check` confirms models and migrations are in sync.
 - Tests build a fresh database with the real migrations, so an incorrect migration fails the test suite.
 
-## Planned hosted deployment (Phase 8 – not yet done)
+## Testing against PostgreSQL (done in Phase 8, 2026-11-24)
 
-- Frontend: Vercel (Next.js native hosting).
-- Backend: a Python host that supports FastAPI (candidates: Render, Railway, Fly.io), chosen after checking
-  current free-tier limits (sleep behaviour, memory for NLP dependencies).
-- Database: managed PostgreSQL (candidates: Neon, Supabase) via `DATABASE_URL`.
-- Only synthetic data is deployed unless the project owner approves otherwise.
+The hosted database will be PostgreSQL, so the whole test suite can run against it. Set `TEST_DATABASE_URL` to an
+**empty, disposable** database. Every test wipes its `public` schema and rebuilds it with the real migrations, so
+**never point it at data you want to keep**. Without the variable the tests use throwaway SQLite files as before.
+
+```powershell
+# from backend/ (psycopg is in requirements.txt)
+$env:TEST_DATABASE_URL = "postgresql+psycopg://user:password@localhost:5432/azzurro_test"
+.venv\Scripts\python.exe -m pytest
+Remove-Item Env:TEST_DATABASE_URL
+
+# time import, analysis and the dashboard endpoints on PostgreSQL (also wipes that database)
+.venv\Scripts\python.exe -m scripts.benchmark --reviews 50000 --database-url "postgresql+psycopg://user:password@localhost:5432/azzurro_test"
+```
+
+How it was run here: a temporary local PostgreSQL started from the `pgserver` Python package in a separate virtual
+environment (no Docker or system install needed). Any empty PostgreSQL works.
+
+**Result (2026-11-24):** all 334 backend tests pass on PostgreSQL and on SQLite (the first run found two *test*
+assumptions, not application bugs: one asserted the backend name "sqlite", and one used a label too long for its column
+so PostgreSQL raised a different error type; both tests were fixed). All four migrations apply on PostgreSQL.
+Benchmark on a local PostgreSQL (same laptop, so no network latency; synthetic repeated text; median of 5 runs):
+
+| Reviews | Import (store) | Analysis | Slowest dashboard endpoint | Generate insights |
+|---|---|---|---|---|
+| 10,000 | 2.5 s | 11.3 s | 0.08 s | 1.2 s |
+| 49,815 | 13.2 s | 60.2 s | 0.45 s (review text search), overview 0.42 s | 4.1 s |
+
+Not measured: a *remote* managed PostgreSQL (network adds a round trip per query; the dashboard makes a handful of
+queries per page), and memory use under analysis load on the hosting plan.
+
+## Hosted deployment (Phase 8: prepared and checked locally, **not executed**)
+
+Nothing has been deployed. Deploying needs the project owner's decisions (see "Decisions needed" below), and nothing in
+this section claims a live system exists.
+
+### Shape of the deployment
+
+Three pieces, each independent:
+
+| Piece | What | Start command |
+|---|---|---|
+| Database | PostgreSQL | managed by the host |
+| API | FastAPI app in `backend/` | `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Web | Next.js app in `frontend/` | build `npm ci && npm run build`, start `npm run start` (or the host's native Next.js support) |
+
+**Release step for the API (every deploy):** `python -m alembic upgrade head` before starting the new code.
+Build step: `pip install -r requirements.txt` (runtime dependencies only, includes the PostgreSQL driver).
+
+### Configuration for production
+
+| Variable | Where | Value |
+|---|---|---|
+| `APP_ENV` | API | `production` |
+| `DATABASE_URL` | API | the host's PostgreSQL URL. `postgres://` and `postgresql://` are accepted and completed to `postgresql+psycopg://` automatically |
+| `CORS_ORIGINS` | API | the exact web origin(s), e.g. `https://your-app.example` (comma-separated, no trailing slash) |
+| `UPLOAD_DIR` | API | a writable folder; a file lives there only between preview and commit |
+| `NEXT_PUBLIC_API_BASE_URL` | Web, **at build time** | the public URL of the API. It is baked into the build, so changing it needs a rebuild |
+| `LLM_PROVIDER` / `LLM_API_KEY` | API | leave unset: there is no LLM adapter |
+
+Secrets (database URL with password) go in the host's secret settings, never in the repository. `.env` files are git-ignored.
+
+### Constraints to know about
+
+- **Run exactly one API instance.** The uploaded file is kept on the instance's local disk between "preview" and
+  "import"; two instances would lose it. This is fine for a demo and must be revisited before scaling.
+- **There is no login.** Anyone who can open the web address can import, delete and regenerate data. For a public
+  demo that is acceptable only with synthetic data (risk R14). Options if more protection is wanted: host behind the
+  platform's password protection, share the address privately, or add a read-only mode / simple access code (not built;
+  needs a decision).
+- **Free plans sleep.** The first request after idle can take about a minute to wake the API; the UI then shows its
+  "Service unreachable" state briefly and recovers on retry.
+- **Only synthetic data is deployed** unless the owner approves otherwise. Load it from Settings -> Load demo data.
+
+### Hosting options and their limits
+
+Checked on 2026-11-24 from the vendors' own pages where they could be read and from third-party summaries otherwise.
+**Verify each figure on the vendor's page before choosing; plans change.** Nothing here has been signed up for.
+
+| Option | Role | Free-plan limits found | Cost to go beyond |
+|---|---|---|---|
+| Vercel Hobby | Web | Personal, non-commercial use only; commercial use needs a paid plan | Pro is paid |
+| Render free web service | API | Sleeps after 15 min idle (about 1 min wake-up); 750 instance hours/month; reported 512 MB RAM; Render reportedly advises against production use of free instances | paid instances remove sleep |
+| Neon free | PostgreSQL | 1 GB storage and 100 compute-hours per project; compute suspends when a limit is reached | pay-as-you-go |
+
+All three can be used at no charge for a demo, but an account (and possibly a payment card on file) is needed, which is
+why this step waits for the owner. The API uses about 65 MB resident on the development machine after start-up
+(Windows; not measured under analysis load), so a 512 MB plan is plausible but **untested**.
+
+### After deploying: smoke test (not yet run)
+
+1. `GET <api>/api/health` returns `status: ok` and `database_backend: postgresql`.
+2. Open the web address: header shows **Service connected**.
+3. Settings -> Load demo data; Overview shows 465 reviews labelled "Synthetic demo data".
+4. Data Import: upload `data/sample/synthetic_reviews_sample.csv`; the report counts add up; undo it.
+5. Insights -> Generate insights; open an insight's evidence.
+6. Record the date, the URLs and any problem in `PROJECT_PROGRESS.md`. Do not claim the deployment works until this is done.
+
+### Decisions needed from the project owner
+
+1. Which hosts (or none: local-only handover), and whether a free account / card on file is acceptable.
+2. Public or private access, and whether a login or read-only mode is required.
+3. Whether any genuine data may ever be hosted (default: no).
 
 ## Troubleshooting
 
