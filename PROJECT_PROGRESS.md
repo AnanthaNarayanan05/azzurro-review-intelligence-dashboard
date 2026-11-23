@@ -458,3 +458,25 @@ ones: the real dataset, a human-labelled sample, LLM provider and cost, assessme
    run the smoke test in `docs/DEPLOYMENT.md`, and record URLs, date and results here.
 2. If real data arrives: import, label a sample, run `scripts.evaluate_models`, write the figures into `docs/AI_ANALYTICS.md` section 7.
 3. Before any public use: access control, and a manual keyboard and screen-reader pass.
+
+## 2026-11-24 – Phase 8 closed: local-only handover (owner's decision)
+
+**Decision:** the project owner chose a **local-only handover**. No hosting accounts were created and nothing was deployed or
+paid for. The hosting runbook in `docs/DEPLOYMENT.md` stays ready (it has not been executed); R37 and R38 apply only if hosted.
+
+**Verified from a fresh clone of origin/main (`c3ec1fc`):** a new virtual environment installed `requirements-dev.txt`;
+`alembic upgrade head` built the database; the API started and `GET /api/health` returned `ok`; `POST /api/demo/load` imported
+465 synthetic reviews and the overview reported them as synthetic; `npm ci` and `npm run build` succeeded (all routes built);
+backend `pytest` passed (334 tests) and frontend `vitest` passed (94 tests). On this Windows machine SQLAlchemy had to be installed
+as pure Python (`DISABLE_SQLALCHEMY_CEXT=1`, `--no-binary sqlalchemy`) as documented under Troubleshooting in `docs/DEPLOYMENT.md`.
+The browser tests (`npm run e2e`) were not re-run from the clone; they last passed (9 of 9) at Phase 7, and no application
+code has changed since.
+
+**State of the project:** Phases 1 to 8 complete (Phase 8 as local-only; Phase 7 without real-data steps).
+
+**Still open (all need the owner):** the real dataset; a human-labelled sample of ~150-200 reviews so accuracy can be measured
+(`docs/LABELLING_GUIDE.md`; until then no accuracy is claimed); LLM provider and cost if AI-written wording is ever wanted
+(adapter not built); hosting, access control and a manual keyboard / screen-reader pass if the app is ever made public.
+
+**Next steps (only when the owner supplies something):** real data -> import, review insights by hand, label and evaluate,
+write results into `docs/AI_ANALYTICS.md` section 7; hosting -> follow `docs/DEPLOYMENT.md`.

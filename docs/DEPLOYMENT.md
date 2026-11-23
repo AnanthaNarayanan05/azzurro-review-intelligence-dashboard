@@ -1,7 +1,8 @@
 # Deployment
 
-Status: **Local setup verified. PostgreSQL compatibility verified locally (Phase 8). Hosted deployment is prepared but
-NOT done: it waits for the project owner's hosting decisions** (see "Hosted deployment" below).
+Status: **Local setup verified (also from a fresh clone of the repository). PostgreSQL compatibility verified locally.
+Hosted deployment is NOT done: the project owner chose a local-only handover on 2026-11-24.** The "Hosted deployment"
+section below is a ready runbook for the day hosting is wanted; none of it has been executed.
 
 ## Environment requirements
 
@@ -116,8 +117,8 @@ queries per page), and memory use under analysis load on the hosting plan.
 
 ## Hosted deployment (Phase 8: prepared and checked locally, **not executed**)
 
-Nothing has been deployed. Deploying needs the project owner's decisions (see "Decisions needed" below), and nothing in
-this section claims a live system exists.
+Nothing has been deployed: the project owner chose a local-only handover (2026-11-24). If hosting is wanted later, it needs
+the decisions listed at the end of this section, and nothing in this section claims a live system exists.
 
 ### Shape of the deployment
 

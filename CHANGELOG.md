@@ -2,9 +2,9 @@
 
 All notable changes, newest first. Dates are when the work was completed.
 
-## Phase 8 - Deployment and handover, prepared (2026-11-24)
+## Phase 8 - Deployment and handover (2026-11-24)
 
-**Not deployed:** the live deployment waits for the project owner's hosting decisions.
+**Not deployed, by decision:** the project owner chose a local-only handover. The hosting runbook is kept ready.
 
 ### Added
 - **PostgreSQL support verified:** `psycopg[binary]` added to `requirements.txt`; `postgres://` / `postgresql://` URLs are

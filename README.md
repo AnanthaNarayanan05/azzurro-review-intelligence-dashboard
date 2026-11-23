@@ -4,7 +4,8 @@ An evidence-based review analytics platform that turns guest reviews for four ho
 measurable business intelligence: satisfaction KPIs, property comparison, aspect-level strengths and
 complaints, trends, and operational recommendations linked to the reviews that support them.
 
-> **Project status: Phase 8 prepared: handover documents and PostgreSQL checks done; hosting waits for the owner's decision.** Working now: CSV/XLSX import with preview, mapping,
+> **Project status: all eight phases done as a local-only handover (decided by the project owner, 2026-11-24).** The app is
+> not hosted; a hosting runbook is ready if that changes. Working now: CSV/XLSX import with preview, mapping,
 > validation, duplicate handling and undo; property management; labelled synthetic demo data; the analytics
 > engine (sentiment, aspect mentions, comparison and trend statistics); and the dashboard pages that show it on
 > live data: Overview, Properties (list and detail), Comparison and a Reviews explorer, driven by URL-synced
@@ -68,7 +69,7 @@ Charts are hand-written SVG/CSS (no chart library; each has a table view). Plann
 | [Roadmap](docs/DEVELOPMENT_ROADMAP.md) | Phases, milestones, completion criteria |
 | [Testing plan](docs/TESTING_PLAN.md) | Unit, API, analytics validation, E2E |
 | [Risk register](docs/RISK_REGISTER.md) | Risks and mitigations |
-| [Deployment](docs/DEPLOYMENT.md) | Setup, PostgreSQL testing, hosting runbook (not yet deployed) |
+| [Deployment](docs/DEPLOYMENT.md) | Setup, PostgreSQL testing, hosting runbook (not deployed: local-only handover) |
 | [Handover](docs/HANDOVER.md) | Plain-language walkthrough, demo script, what is and is not proven, likely questions |
 | [Labelling guide](docs/LABELLING_GUIDE.md) | How to label a sample so accuracy can be measured |
 | [Project progress](PROJECT_PROGRESS.md) | Current phase, files, tests, decisions, exact next steps |
@@ -134,8 +135,9 @@ backend/scripts/  generate_sample_files.py (rebuilds data/sample/synthetic_revie
 
 ## Deployment
 
-**Not deployed.** The app runs locally and has been tested against PostgreSQL; the hosting runbook, limits of the
-candidate free plans and the decisions needed from the project owner are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+**Not deployed, by decision:** the project owner chose a local-only handover (2026-11-24). The app runs locally and has been
+tested against PostgreSQL; the hosting runbook, limits of the candidate free plans and the decisions that would be needed
+are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) if hosting is wanted later.
 Screenshots (synthetic data) are in `docs/screenshots/`.
 
 ## Known limitations
