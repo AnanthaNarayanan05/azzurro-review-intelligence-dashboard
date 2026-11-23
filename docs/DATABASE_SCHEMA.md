@@ -102,7 +102,7 @@ Constraints / indexes:
 | Column | Type | Constraints |
 |---|---|---|
 | id | INTEGER | PK |
-| trigger | VARCHAR(16) | `import` / `manual` |
+| triggered_by | VARCHAR(16) | `import` / `manual` |
 | sentiment_engine | VARCHAR(64) | NOT NULL (e.g. `vader-3.3.2`) |
 | aspect_lexicon_version | VARCHAR(32) | NOT NULL |
 | reviews_processed | INTEGER | NOT NULL |
