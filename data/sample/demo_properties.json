@@ -1,0 +1,45 @@
+{
+  "_comment": "SYNTHETIC DEMO CONFIGURATION. Property names and public listing links come from the project brief. The 'profile' values below are invented purely to make the demo data differ between properties; they say nothing about the real hotels.",
+  "properties": [
+    {
+      "code": "olympic-paddington",
+      "name": "Olympic Hotel Paddington",
+      "listing_url": "https://www.booking.com/hotel/au/olympic-paddington.html",
+      "profile": {
+        "quality": 0.72,
+        "aspect_bias": {"location": 0.2, "noise": -0.3, "maintenance": -0.12, "value": 0.05},
+        "recent_drift": {}
+      }
+    },
+    {
+      "code": "potts-point",
+      "name": "Potts Point",
+      "listing_url": "https://www.booking.com/hotel/au/venus-potts-point-sydney.html",
+      "profile": {
+        "quality": 0.78,
+        "aspect_bias": {"breakfast": 0.15, "value": -0.15, "staff": 0.1},
+        "recent_drift": {"wifi": -0.4}
+      }
+    },
+    {
+      "code": "central-sydney",
+      "name": "Central Sydney",
+      "listing_url": "https://www.booking.com/hotel/au/venus-surry-hills.html",
+      "profile": {
+        "quality": 0.66,
+        "aspect_bias": {"staff": 0.12, "cleanliness": -0.1, "facilities": -0.05},
+        "recent_drift": {"cleanliness": -0.35}
+      }
+    },
+    {
+      "code": "darling-harbour",
+      "name": "Darling Harbour",
+      "listing_url": "https://www.booking.com/hotel/au/chateau-de-venus.html",
+      "profile": {
+        "quality": 0.7,
+        "aspect_bias": {"facilities": 0.2, "check_in": -0.28, "noise": -0.1, "comfort": 0.08},
+        "recent_drift": {}
+      }
+    }
+  ]
+}

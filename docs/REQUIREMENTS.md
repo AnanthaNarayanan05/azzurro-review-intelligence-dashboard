@@ -27,7 +27,9 @@ Status: Draft for approval (Phase 1). IDs are referenced by tests and the roadma
 - **FR-I6** Detect duplicates within the file and against previously imported data.
 - **FR-I7** Never silently discard records: every rejected/duplicate row is recorded with a reason.
 - **FR-I8** Produce an import report: received, imported, rejected, duplicates, reasons (grouped and per row).
-- **FR-I9** Ingestion uses a source-adapter interface so an authorised API source can be added later.
+- **FR-I9** Ingestion is built around a source-adapter boundary so an authorised API source can be added later. Today the only source is a user-supplied file (see "Data collection feasibility" below); no automated collector exists.
+- **FR-I11** Every import records its provenance: original filename, file hash, the source name the user declared, import time, and the mapping used. A review keeps its source label and `is_synthetic` flag.
+- **FR-I12** An import can be undone, removing exactly the reviews that import created.
 - **FR-I10** Clearly labelled synthetic sample data can be generated/loaded for demonstration.
 
 ### Analysis
@@ -74,3 +76,27 @@ with validation, duplicate detection and reports; sentiment and aspect analysis 
 labelled sample with reported metrics; all dashboard modules are wired to live API data; search, filters,
 sort and pagination work; insights link to real review IDs; core tests pass; documentation matches the
 implementation; no secrets or private data are in Git; deployment (if required) is verified live.
+
+## Data collection feasibility (decision recorded in Phase 3)
+
+**Question:** can reviews for the four properties be collected automatically from their public Booking.com pages?
+
+**Finding:** not in a way this project is permitted to build.
+- Booking.com's published terms prohibit automated access to the site and scraping without its prior written
+  permission, and a page being publicly visible does not grant that permission.
+- There is no public Booking.com API for retrieving guest reviews. Review access through the partner programme
+  requires an approved partner account, which this project does not have, and none is assumed.
+- Evading restrictions (CAPTCHAs, rate limits, disguised automation) is out of scope under the project rules.
+
+**Decision:** no scraper is built. Reviews enter the system only through
+1. **file import (CSV/XLSX)** of an export the property owner is entitled to use, e.g. from the Booking.com
+   extranet or another authorised source; and
+2. **clearly labelled synthetic demo data** for development and demonstration.
+
+**What this means for requirements:** every requirement that said "collect" is satisfied by "import". Collection
+timestamps are recorded as the import time (`imported_at`), and provenance as the batch (filename, file hash,
+declared source). The declared source name is the uploader's statement and is not verified by the system.
+
+**Future path:** if written permission or a partner API is obtained, a new adapter would produce the same
+normalised rows that file import produces and reuse the same validation, de-duplication, reporting and undo.
+That would be a separate, approved piece of work.

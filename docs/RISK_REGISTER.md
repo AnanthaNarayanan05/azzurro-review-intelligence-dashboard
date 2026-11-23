@@ -5,7 +5,7 @@ Likelihood / Impact: L = low, M = medium, H = high.
 | # | Risk | Category | L | I | Mitigation |
 |---|---|---|---|---|---|
 | R1 | Real dataset not yet provided; its format is unknown | Data availability | H | H | Flexible column mapping; build on flagged synthetic data; schema designed to adapt; re-tune once data arrives |
-| R2 | No authorised Booking.com API access | API dependency | H | M | File-based ingestion; source-adapter interface for a future authorised integration; no scraping |
+| R2 | No authorised Booking.com API access; the site's terms prohibit automated collection | API dependency / legal | H | M | **Decision (Phase 3):** no scraper. File import is the only collection route; provenance recorded per import; the pipeline accepts any future authorised source. See `REQUIREMENTS.md` |
 | R3 | Export lacks fields (no review ID, no language, single text field) | Data | M | M | Content-hash dedup; language detection; `body_text` path; analytics degrade gracefully and report what is missing |
 | R4 | Multilingual reviews reduce English-only NLP coverage | AI/NLP | M | H | Measure language mix first; multilingual model if needed; report excluded counts transparently |
 | R5 | Sentiment/aspect accuracy lower than expected | AI/NLP | M | H | Labelled-sample evaluation; tune lexicon/thresholds; consider transformer only if it measurably helps |
@@ -21,3 +21,7 @@ Likelihood / Impact: L = low, M = medium, H = high.
 | R15 | Free-tier hosting limits change (sleep, DB expiry) | Deployment | M | M | Check current limits at Phase 8; document; keep local run fully supported |
 | R16 | Scope creep vs assessment deadline | Delivery | M | H | Phase gates; core analytics before optional LLM; ask for deadline |
 | R17 | SQLite → PostgreSQL behaviour differences | Technical | L | M | SQLAlchemy portable types; run test suite against PostgreSQL before deployment |
+| R18 | Uploaded export contains guest names or other personal data | Privacy | M | H | Guest names are not importable; unmapped columns are not stored; uploads are deleted after commit; imports can be undone |
+| R19 | Day/month ambiguity silently misdates reviews | Data quality | M | M | Ambiguous dates are rejected unless the user chooses an order; the choice is stored on the batch |
+| R20 | The declared source name on an import is wrong or misleading | Provenance | M | M | Shown as the uploader's statement, not verified; synthetic data is forced to `synthetic-demo` and counted separately |
+| R21 | SQLite write contention ("database is locked") during import | Technical | L | M | Single transaction, 3 retries, full rollback on failure (tested); PostgreSQL planned for hosting |

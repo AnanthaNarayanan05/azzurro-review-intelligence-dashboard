@@ -47,11 +47,14 @@ Maps raw property values found in source files to a property.
 | column_mapping | JSON | NOT NULL (source column → internal field) |
 | rating_scale_max | NUMERIC(4,1) | NOT NULL, default 10 |
 | status | VARCHAR(16) | NOT NULL, CHECK IN (`previewed`,`processing`,`completed`,`failed`) |
-| total_rows / imported_rows / rejected_rows / duplicate_rows | INTEGER | NOT NULL, default 0 |
+| total_rows / imported_rows / updated_rows / rejected_rows / duplicate_rows | INTEGER | NOT NULL, default 0 (`updated_rows` added in Phase 3) |
+| import_options | JSON | NOT NULL, default `{}` (date format, property mapping, sheet, alias choice; Phase 3) |
+| stored_filename | VARCHAR(255) | NULL. Name of the private copy in `data/uploads`; set only between preview and commit, cleared after (Phase 3) |
+| error_message | TEXT | NULL. Why a `failed` import was rolled back (Phase 3) |
 | is_synthetic | BOOLEAN | NOT NULL, default false |
 | created_at / completed_at | TIMESTAMP | |
 
-Invariant (tested): `total_rows = imported_rows + rejected_rows + duplicate_rows`.
+Invariant (tested): `total_rows = imported_rows + updated_rows + rejected_rows + duplicate_rows`.
 
 ### import_row_issues
 Every non-imported row is recorded here – nothing is silently discarded.
@@ -62,7 +65,7 @@ Every non-imported row is recorded here – nothing is silently discarded.
 | row_number | INTEGER | NOT NULL (1-based, as in the source file) |
 | outcome | VARCHAR(16) | CHECK IN (`rejected`,`duplicate`,`warning`) |
 | field | VARCHAR(64) | NULL |
-| code | VARCHAR(48) | NOT NULL (e.g. `INVALID_DATE`, `RATING_OUT_OF_RANGE`, `UNKNOWN_PROPERTY`, `NO_TEXT_AND_NO_RATING`, `DUPLICATE_IN_FILE`, `DUPLICATE_EXISTING`) |
+| code | VARCHAR(48) | NOT NULL. The implemented codes are listed in `API_SPECIFICATION.md` (e.g. `INVALID_DATE`, `RATING_OUT_OF_RANGE`, `UNKNOWN_PROPERTY`, `EMPTY_REVIEW`, `DUPLICATE_IN_FILE`, `DUPLICATE_EXTERNAL_ID`, `DUPLICATE_CONTENT`) |
 | message | VARCHAR(500) | NOT NULL |
 | duplicate_of_review_id | INTEGER | NULL, FK → reviews.id |
 
@@ -87,10 +90,12 @@ Warnings (e.g. missing language, rating missing but text present) do not block i
 | language_detected | BOOLEAN | NOT NULL, default false |
 | traveller_type / reviewer_country / room_type | VARCHAR(100) | NULL, only if provided |
 | stay_nights | INTEGER | NULL |
-| extra | JSON | NULL (unmapped columns kept for audit, excluding personal names) |
-| content_hash | CHAR(64) | NOT NULL (hash of property + date + normalised texts + rating) |
+| extra | JSON | NULL. Reserved for audit of unmapped columns. **Not populated in Phase 3**: unmapped columns are deliberately discarded (data minimisation) |
+| content_hash | CHAR(64) | NOT NULL. SHA-256 of source, property id, date, rating (2 decimals) and the normalised title, positive, negative and body text. Source is included so a synthetic review can never collide with a genuine one |
 | is_synthetic | BOOLEAN | NOT NULL, default false |
+| source_url | TEXT | NULL. Optional link to the review at its source, only if the file supplies one (Phase 3) |
 | imported_at | TIMESTAMP | NOT NULL |
+| updated_at | TIMESTAMP | NULL. Set when a re-import changes an existing review in place (Phase 3) |
 
 Constraints / indexes:
 - CHECK: at least one of `positive_text`, `negative_text`, `body_text`, `rating` is non-null.

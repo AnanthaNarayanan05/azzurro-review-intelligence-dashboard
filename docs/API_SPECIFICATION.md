@@ -1,7 +1,8 @@
 # API Specification
 
-Status: Proposed (Phase 1). The live, authoritative contract will be the generated OpenAPI docs at
-`/docs` (Swagger UI) and `/openapi.json` once the backend exists.
+Status: Phases 2–3 implemented (health, properties, imports, demo data). Analytics, reviews, analysis and insights
+are still the agreed design. The live, authoritative contract is the generated OpenAPI documentation at `/docs`
+(Swagger UI) and `/openapi.json`; this file explains intent and behaviour.
 
 ## Conventions
 
@@ -15,46 +16,84 @@ Status: Proposed (Phase 1). The live, authoritative contract will be the generat
 - **Common analytics filters:** `property_ids` (comma-separated), `date_from`, `date_to` (ISO dates).
 - Dates ISO-8601; ratings on a 0–10 scale.
 
-**Implemented so far:** `GET /api/health` only (Phase 2). All other endpoints below are the agreed design and are
-not implemented yet.
+**Implemented so far:** `GET /api/health` (Phase 2); properties, imports and demo-data endpoints (Phase 3). Sections
+marked *Design only* are not implemented yet.
 
 ## System
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/health` | **Implemented.** Returns `{data: {status, version, environment, database, database_backend, sentiment_engine, llm_enabled}}`; HTTP 200 when healthy, 503 with `status: "degraded"` when the database is unreachable |
 
-## Properties
+## Properties (implemented, Phase 3)
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/properties` | List properties with review counts |
+| GET | `/api/properties` | List properties with `review_count` (genuine reviews only), `synthetic_review_count` and aliases |
 | GET | `/api/properties/{id}` | Property detail with aliases |
-| POST | `/api/properties` | Create `{ name, code, location? }` |
-| PATCH | `/api/properties/{id}` | Update name/location/active |
-| POST | `/api/properties/{id}/aliases` | Add a source-name alias |
-| DELETE | `/api/properties/{id}/aliases/{alias_id}` | Remove an alias |
+| POST | `/api/properties` | Create `{ name, code?, location? }`. `code` is derived from the name if omitted. 409 if name or code exists |
+| PATCH | `/api/properties/{id}` | Update `name`, `location`, `is_active` |
+| POST | `/api/properties/{id}/aliases` | Add a source-name alias `{ alias }` (stored lower-cased, whitespace-collapsed). 409 if another property already uses it |
+| DELETE | `/api/properties/{id}/aliases/{alias_id}` | Remove an alias (204) |
 
-## Imports
+Property names are data. Nothing in the code refers to a specific hotel.
+
+## Imports (implemented, Phase 3)
+
+The import is a two-step flow so that nothing is written until the user has seen what will happen.
+
 | Method | Path | Description |
 |---|---|---|
-| POST | `/api/imports/preview` | Upload file (`file`). Validates type/size/structure. Returns `import_id`, detected columns, first 20 rows, suggested column mapping, distinct property values with suggested property matches |
-| POST | `/api/imports/{id}/commit` | Body `{ column_mapping, property_mapping, rating_scale_max, date_format? }`. Validates, imports, analyses. Returns import report |
-| GET | `/api/imports` | Import history |
-| GET | `/api/imports/{id}` | Import report summary (counts + grouped rejection reasons) |
-| GET | `/api/imports/{id}/issues` | Paginated row-level issues (`outcome`, `code` filters) |
-| DELETE | `/api/imports/{id}` | Remove an import and its reviews (undo) |
+| GET | `/api/imports/fields` | The importable fields (key, label, description, `required`: `always` / `one_of` / `no`) |
+| POST | `/api/imports/preview` | Multipart `file`. Validates type, content and size, stores the upload privately, creates a `previewed` batch and returns `import_id`, filename, `source_type`, `total_rows`, `columns`, `sheets` / `sheet` (XLSX), `encoding`, `delimiter`, first rows, `suggested_mapping`, `property_values` and `already_imported_as` (id of an earlier import of the identical file, else null) |
+| GET | `/api/imports/{id}/preview?sheet=` | Re-read a previewed XLSX with another worksheet selected |
+| GET | `/api/imports/{id}/property-values?column=&sheet=` | Distinct values of a chosen column with counts and the suggested property (`alias`, `name`, `code` or `similar` match) |
+| POST | `/api/imports/{id}/commit` | Body `{ column_mapping, property_mapping, fixed_property_id, rating_scale_max, date_format, source_name, is_synthetic, sheet, remember_aliases }`. Validates and writes in **one transaction**. Returns the import report. A failure rolls everything back, marks the batch `failed` and deletes the stored file |
+| GET | `/api/imports` | History (paginated, newest first; abandoned previews are hidden unless filtered) |
+| GET | `/api/imports/{id}` | Import report: counts, grouped issue summary |
+| GET | `/api/imports/{id}/issues` | Paginated row issues; filters `outcome`, `code`; `page_size` ≤ 100 |
+| DELETE | `/api/imports/{id}` | Undo: removes the batch, its reviews and issues. Returns `{ removed_reviews }` |
 
-Internal fields available for mapping: `external_review_id, property, review_date, rating, title,
-positive_text, negative_text, body_text, language, traveller_type, reviewer_country, room_type, stay_nights`.
-Required: `property` (or a single fixed property chosen in the UI), `review_date`, and at least one of
+Report counts always reconcile: `total_rows = imported_rows + updated_rows + duplicate_rows + rejected_rows`.
+`updated_rows` counts existing reviews (same source and external review ID) whose content changed and were updated in
+place. `warning_count` is the number of imported rows that carry a warning.
+
+Importable fields: `external_review_id, property, review_date, rating, title, positive_text, negative_text,
+body_text, language, traveller_type, reviewer_country, room_type, stay_nights, source_url`. Guest names are never
+importable. Required: `review_date`, a property (a `property` column **or** `fixed_property_id`), and at least one of
 rating / text fields.
 
-## Reviews
+Dates: ISO, textual (`14 March 2026`), or day/month/year vs month/day/year as chosen with `date_format`
+(`auto`, `iso`, `dmy`, `mdy`). In `auto` mode an ambiguous date such as `03/04/2026` is rejected rather than
+guessed. Dates in the future or before 1996 are rejected. Ratings are converted to 0–10 using `rating_scale_max`
+(comma decimals accepted); the original value is stored in `rating_raw`.
+
+Row issue codes: rejected – `MISSING_DATE, INVALID_DATE, AMBIGUOUS_DATE, FUTURE_DATE, INVALID_RATING,
+RATING_OUT_OF_RANGE, EMPTY_REVIEW, TEXT_TOO_LONG, MISSING_PROPERTY, UNKNOWN_PROPERTY`; duplicate –
+`DUPLICATE_EXTERNAL_ID, DUPLICATE_CONTENT, DUPLICATE_IN_FILE`; warning – `REVIEW_UPDATED, MISSING_RATING,
+INVALID_LANGUAGE, INVALID_STAY_NIGHTS, INVALID_URL`.
+
+Import error codes (HTTP status): `EMPTY_FILE`, `NO_HEADER`, `NO_DATA_ROWS`, `UNREADABLE_FILE`, `UNKNOWN_SHEET`,
+`UNKNOWN_COLUMN` and `INVALID_MAPPING` (422); `UNSUPPORTED_FILE_TYPE` and `FILE_CONTENT_MISMATCH` (415);
+`FILE_TOO_LARGE` and `TOO_MANY_ROWS` (413); `IMPORT_NOT_FOUND` (404); `IMPORT_NOT_PENDING` and `IMPORT_IN_PROGRESS`
+(409); `UPLOAD_EXPIRED` (410, the stored preview was purged after 24 hours); `IMPORT_FAILED` (500, rolled back).
+Property error codes: `PROPERTY_NOT_FOUND`, `ALIAS_NOT_FOUND` (404); `PROPERTY_EXISTS`, `ALIAS_EXISTS` (409).
+
+## Demo data (implemented, Phase 3)
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/demo` | `{ loaded, synthetic_review_count, import_ids, notice }` |
+| POST | `/api/demo/load` | Generates the deterministic synthetic dataset and loads it through the normal import pipeline (201). 409 `DEMO_ALREADY_LOADED` if present |
+| DELETE | `/api/demo` | Removes every synthetic review and its import batch. Genuine reviews and properties are untouched |
+
+Synthetic reviews always have `source = synthetic-demo` and `is_synthetic = true`; they can never be labelled as
+coming from Booking.com.
+
+## Reviews (design only)
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/reviews` | Query params: `q`, `property_ids`, `date_from`, `date_to`, `rating_min`, `rating_max`, `sentiment`, `aspect`, `aspect_sentiment`, `language`, `sort` (`newest`/`oldest`/`rating_desc`/`rating_asc`), `page`, `page_size` (≤ 100) |
 | GET | `/api/reviews/{id}` | Original text + sentiment per segment + aspect mentions with evidence |
 
-## Analytics
+## Analytics (design only)
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/analytics/overview` | KPIs, sentiment distribution, rating distribution, per-property volume & rating, top positive/negative aspects |
@@ -64,13 +103,13 @@ rating / text fields.
 | GET | `/api/analytics/aspects` | Per-aspect mention counts and sentiment split; `aspect` for example evidence |
 | GET | `/api/analytics/trends` | `metric` (`volume`/`avg_rating`/`sentiment`/`aspect_negative_share`), `granularity` (`month`/`quarter`), `aspect?`; returns series + detected changes (or `insufficient_data`) |
 
-## Analysis
+## Analysis (design only)
 | Method | Path | Description |
 |---|---|---|
 | POST | `/api/analysis/run` | Re-run NLP over all (or filtered) reviews; returns `analysis_run_id` |
 | GET | `/api/analysis/runs` | History of analysis runs |
 
-## Insights
+## Insights (design only)
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/insights` | Filters: `property_ids`, `insight_type`, `evidence_strength`; paginated |

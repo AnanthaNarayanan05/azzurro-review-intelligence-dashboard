@@ -29,11 +29,17 @@ class ImportBatch(Base):
     source_type: Mapped[str] = mapped_column(String(32))
     source_name: Mapped[str] = mapped_column(String(64), default="booking.com")
     column_mapping: Mapped[dict] = mapped_column(JSON, default=dict)
+    # Everything else the user chose at commit time (property mapping, date format, sheet...).
+    import_options: Mapped[dict] = mapped_column(JSON, default=dict)
+    # Temporary copy of the uploaded file between preview and commit; deleted afterwards.
+    stored_filename: Mapped[str | None] = mapped_column(String(255))
+    error_message: Mapped[str | None] = mapped_column(String(500))
     rating_scale_max: Mapped[Decimal] = mapped_column(Numeric(4, 1), default=Decimal("10"))
     status: Mapped[str] = mapped_column(String(16), default=ImportStatus.PREVIEWED.value)
     total_rows: Mapped[int] = mapped_column(Integer, default=0)
     imported_rows: Mapped[int] = mapped_column(Integer, default=0)
     rejected_rows: Mapped[int] = mapped_column(Integer, default=0)
+    updated_rows: Mapped[int] = mapped_column(Integer, default=0)
     duplicate_rows: Mapped[int] = mapped_column(Integer, default=0)
     is_synthetic: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = created_at_column()

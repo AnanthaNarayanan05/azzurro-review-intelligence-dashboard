@@ -63,6 +63,17 @@ npm run lint
 npm run build
 ```
 
+## Importing data locally
+
+- Open **Data Import**, choose a `.csv` or `.xlsx` file, match columns, choose properties and formats, confirm.
+- Sample files for trying the wizard: `data/sample/synthetic_reviews_sample.csv` and `.xlsx` (synthetic, 465 rows;
+  regenerate with `python -m scripts.generate_sample_files` from `backend/`).
+- Settings read from the environment: `MAX_UPLOAD_MB` (default 20), `MAX_IMPORT_ROWS` (default 100000) and
+  `UPLOAD_DIR` (default `data/uploads`, git-ignored). An uploaded file exists there only between preview and
+  commit and is then deleted; previews abandoned for 24 hours are purged.
+- After pulling changes that add migrations, run `python -m alembic upgrade head` again. Restart the backend
+  afterwards so it loads the new code.
+
 ## Database migrations
 
 - Schema changes are made in `backend/app/models`, then:

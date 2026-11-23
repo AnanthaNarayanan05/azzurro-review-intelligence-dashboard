@@ -47,11 +47,12 @@ PostgreSQL (hosted).
 | [Testing plan](docs/TESTING_PLAN.md) | Unit, API, analytics validation, E2E |
 | [Risk register](docs/RISK_REGISTER.md) | Risks and mitigations |
 | [Deployment](docs/DEPLOYMENT.md) | Setup and hosting (planned) |
-| [Progress log](PROGRESS_LOG.md) | Chronological development record |
+| [Project progress](PROJECT_PROGRESS.md) | Current phase, files, tests, decisions, exact next steps |
+| [Changelog](CHANGELOG.md) | What changed in each phase |
 
 ## Data policy
 
-- Review data is only ingested from authorised exports. Booking.com is not scraped.
+- Review data is only ingested from authorised exports (CSV/XLSX). Booking.com is not scraped: its terms prohibit automated access and it has no public reviews API (see [Requirements](docs/REQUIREMENTS.md#data-collection-feasibility-decision-recorded-in-phase-3)).
 - Real review files, uploads and local databases are git-ignored and never committed.
 - Any sample data in this repository is **synthetic**, is labelled as such, and is not real guest feedback.
 
@@ -71,16 +72,17 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. API docs: http://localhost:8000/docs. No `.env` file or API keys are needed
+Open http://localhost:3000, go to **Settings → Load demo data** to try the dashboard with clearly labelled
+synthetic reviews, or **Data Import** to upload your own CSV/XLSX export. API docs: http://localhost:8000/docs. No `.env` file or API keys are needed
 for local development. Full instructions, configuration and troubleshooting (including a Windows
 Application Control workaround) are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Testing
 
 ```powershell
-# from backend/  – 26 tests: API, errors, config, database integrity
+# from backend/  – 151 tests: API, errors, config, database integrity, ingestion
 .venv\Scripts\python.exe -m pytest
-# from frontend/ – 15 tests: API client, status UI, navigation
+# from frontend/ – 28 tests: API client, status UI, navigation, import wizard
 npm test
 ```
 
@@ -91,6 +93,7 @@ backend/    FastAPI app (app/api, app/core, app/models, app/schemas), Alembic mi
 frontend/   Next.js App Router app (app/, components/, hooks/, lib/, services/, types/), tests
 docs/       Blueprint, requirements, architecture, schema, API, AI/NLP, roadmap, testing, risks, deployment
 data/       sample/ (synthetic, tracked) · raw/, processed/, uploads/ (private, git-ignored)
+backend/scripts/  generate_sample_files.py (rebuilds data/sample/synthetic_reviews_sample.csv/.xlsx)
 ```
 
 ## Deployment

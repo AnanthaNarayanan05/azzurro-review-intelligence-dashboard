@@ -120,4 +120,38 @@ Next.js 16.4, React 19.3, FastAPI 0.165, SQLAlchemy 2.1, Pydantic 2.14).
 | Backend: settings, DB session, error envelope, CORS, `/api/health` | Implemented (Phase 2) |
 | Database: all 12 tables, constraints, indexes, initial Alembic migration | Implemented (Phase 2) |
 | Frontend: app shell, responsive navigation, typed API client, live service status | Implemented (Phase 2) |
-| Ingestion, NLP, analytics, insights, dashboard pages | Not started (Phases 3–6) |
+| Ingestion: parsing, mapping, validation, de-duplication, import reports, undo, property aliases, synthetic demo data (API plus Data Import and Settings pages) | Implemented (Phase 3) |
+| NLP, analytics, insights, dashboard pages | Not started (Phases 4–6) |
+
+## Ingestion design (implemented in Phase 3)
+
+```
+upload -> preview -> (user chooses mapping, properties, formats) -> commit -> report -> [undo]
+          |                                                          |
+          stored privately in data/uploads                           one transaction; file deleted afterwards
+```
+
+Module layout (`backend/app/services/ingestion/`):
+
+| Module | Responsibility |
+|---|---|
+| `parsing.py` | Safe parsing. Extension **and** content check, CSV encodings (utf-8, utf-8-sig, utf-16, cp1252) and delimiter sniffing, XLSX zip-bomb guard, row cap |
+| `mapping.py` | The importable fields and header-name suggestions. Reviewer names are not importable |
+| `rows.py` | Per-row conversion and validation: dates, ratings, text, optional fields; produces a clean row or issues |
+| `normalise.py` | Text cleaning and the content fingerprint |
+| `pipeline.py` | Preview, commit (validate, de-duplicate, write), undo, stale-preview purge |
+
+Rules worth knowing when explaining the design:
+1. **Preview before write.** Nothing is saved until the user confirms; an abandoned preview is purged after 24 hours.
+2. **All or nothing.** The write phase is one database transaction. On a SQLite "locked" error it retries (3 attempts); on any other failure everything is rolled back, the batch is marked `failed` and the stored file is deleted.
+3. **De-duplication order.** In-file external ID or content hash first, then an existing review with the same source + external ID (unchanged = duplicate; changed = updated in place), then an existing review with the same content hash.
+4. **Counts reconcile.** `total = imported + updated + duplicates + rejected`, checked by tests and shown in the UI.
+5. **Synthetic separation.** `is_synthetic` forces the source `synthetic-demo`; genuine and synthetic counts are reported separately everywhere.
+6. **Property resolution.** Alias, name, code, then a fuzzy match (similarity 0.86 or higher) which is only a *suggestion* the user confirms. Confirmed spellings are remembered as aliases.
+
+### Source-adapter boundary
+
+The pipeline consumes a table of rows plus a mapping. Anything that can produce such a table is a "source". Today
+that is `parse_file` (CSV/XLSX). A future authorised API source would implement the same hand-off and reuse every
+step after parsing. No code is written for a Booking.com collector (see `REQUIREMENTS.md`, "Data collection
+feasibility"); the boundary is a design rule, not an unused abstraction layer.

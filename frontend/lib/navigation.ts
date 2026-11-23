@@ -39,8 +39,8 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Data",
     items: [
-      { href: "/import", label: "Data Import", icon: Upload, phase: 3, available: false },
-      { href: "/settings", label: "Settings", icon: Settings, phase: 3, available: false },
+      { href: "/import", label: "Data Import", icon: Upload, phase: 3, available: true },
+      { href: "/settings", label: "Settings", icon: Settings, phase: 3, available: true },
     ],
   },
 ];

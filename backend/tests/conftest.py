@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.core.config import Settings, get_settings
 from app.core.database import build_engine, get_db
 from app.main import create_app
 
@@ -43,8 +44,15 @@ def db_session(engine: Engine) -> Iterator[Session]:
 
 
 @pytest.fixture()
-def app(engine: Engine):
+def settings(tmp_path: Path) -> Settings:
+    """Settings with an isolated upload folder so tests never touch real data."""
+    return Settings(upload_dir=str(tmp_path / "uploads"), app_env="test")
+
+
+@pytest.fixture()
+def app(engine: Engine, settings: Settings):
     application = create_app()
+    application.dependency_overrides[get_settings] = lambda: settings
     factory = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
     def _override_get_db() -> Iterator[Session]:

@@ -188,3 +188,35 @@ def test_property_with_reviews_cannot_be_deleted(db_session: Session) -> None:
 
     with pytest.raises(IntegrityError):
         db_session.execute(Property.__table__.delete().where(Property.id == prop.id))
+
+
+def test_ingestion_migration_upgrades_a_database_that_already_has_data(tmp_path):
+    """The ingestion migration adds NOT NULL columns; it must not fail on existing rows."""
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy import create_engine, text
+
+    from tests.conftest import BACKEND_DIR
+
+    url = f"sqlite:///{(tmp_path / 'old.db').as_posix()}"
+    config = Config(str(BACKEND_DIR / "alembic.ini"))
+    config.set_main_option("script_location", str(BACKEND_DIR / "migrations"))
+    config.set_main_option("sqlalchemy.url", url)
+    command.upgrade(config, "4d3a2519d93a")  # the Phase 2 schema
+    engine = create_engine(url)
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO import_batches (filename, file_sha256, source_type, source_name, "
+                "column_mapping, rating_scale_max, status, total_rows, imported_rows, "
+                "rejected_rows, duplicate_rows, is_synthetic, created_at) VALUES "
+                "('old.csv', 'abc', 'csv', 'booking.com', '{}', 10, 'completed', 1, 1, 0, 0, 0, "
+                "'2026-01-01')"
+            )
+        )
+    command.upgrade(config, "head")
+    with engine.connect() as conn:
+        row = conn.execute(text("SELECT updated_rows, import_options FROM import_batches")).one()
+    assert row[0] == 0
+    assert row[1] == "{}"
+    engine.dispose()

@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # Stored as a comma-separated string so it can be set from a plain env var.
     cors_origins: str = "http://localhost:3000"
 
+    # Empty means <repo>/data/uploads (git-ignored). A file lives here only between preview and
+    # commit, then it is deleted.
+    upload_dir: str = ""
+
     max_upload_mb: int = Field(default=20, gt=0, le=200)
     max_import_rows: int = Field(default=100_000, gt=0)
     default_rating_scale_max: float = Field(default=10, gt=0)
@@ -53,6 +57,10 @@ class Settings(BaseSettings):
         if self.database_url:
             return self.database_url
         return f"sqlite:///{DEFAULT_SQLITE_PATH.as_posix()}"
+
+    @property
+    def resolved_upload_dir(self) -> Path:
+        return Path(self.upload_dir) if self.upload_dir else REPO_ROOT / "data" / "uploads"
 
     @property
     def cors_origin_list(self) -> list[str]:

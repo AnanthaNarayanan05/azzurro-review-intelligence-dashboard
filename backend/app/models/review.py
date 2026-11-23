@@ -6,6 +6,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Date,
+    DateTime,
     ForeignKey,
     Index,
     Integer,
@@ -67,7 +68,10 @@ class Review(Base):
     extra: Mapped[dict | None] = mapped_column(JSON)
     content_hash: Mapped[str] = mapped_column(String(64), unique=True)
     is_synthetic: Mapped[bool] = mapped_column(Boolean, default=False)
+    source_url: Mapped[str | None] = mapped_column(Text)
     imported_at: Mapped[datetime] = created_at_column()
+    # Set only when a later import changed this review's content (same external ID).
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     property: Mapped["Property"] = relationship()  # noqa: F821
     sentiment_results: Mapped[list["SentimentResult"]] = relationship(  # noqa: F821

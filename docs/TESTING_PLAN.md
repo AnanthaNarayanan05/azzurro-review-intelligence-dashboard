@@ -1,6 +1,6 @@
 # Testing Plan
 
-Status: In progress. Results of each run are recorded in `PROGRESS_LOG.md`.
+Status: In progress. Results of each run are recorded in `PROJECT_PROGRESS.md`.
 
 **Implemented (Phase 2):**
 - Backend (pytest, 26 tests): health endpoint (ok and degraded), error envelope for 404/405/422/500 with no
@@ -11,6 +11,12 @@ Status: In progress. Results of each run are recorded in `PROGRESS_LOG.md`.
   unreadable body), health 503 handling, status indicator states, status card retry, navigation (active page,
   disabled unbuilt pages are not links).
 - Manual browser check: desktop and 375 px mobile layouts, mobile menu, backend-down error state and recovery.
+
+**Implemented (Phase 3):**
+- Backend (pytest, **151 tests in total**, run 2026-11-24): parsing (CSV encodings, delimiters, BOM, XLSX sheets, empty and header-only files, renamed binaries, oversize and row-cap), mapping suggestions, date/rating parsing (ambiguous, future, comma decimals, scale conversion), row validation, in-file and cross-import de-duplication, in-place updates, property resolution and aliases, count reconciliation, transactional rollback and file cleanup on failure, stale-preview purge, undo, synthetic separation, demo load/clear, migration upgrade on a populated database, and every import/property/demo endpoint including error codes.
+- Frontend (Vitest, **28 tests in total**): wizard logic (`mappingProblems`, `propertyProblems`, `buildCommitRequest`), mapping step (blocks until valid, same-file warning), report view (reconciliation sentence, synthetic and failed labels), plus the Phase 2 suites.
+- Manual browser run (2026-11-24, built-in browser): upload a CSV with a duplicate, an unreadable date and a future date, create properties from file values, import, read the report (6 rows = 3 imported + 1 duplicate + 2 rejected), undo (reviews removed, properties kept), load demo data (465 reviews across four properties, counted as synthetic), remove it, view history. No application console errors on fresh loads.
+- Not yet covered: automated browser (Playwright) test of the wizard, XLSX upload through the UI, accessibility audit.
 
 ## 1. Backend unit tests (pytest)
 
