@@ -88,11 +88,20 @@ Property error codes: `PROPERTY_NOT_FOUND`, `ALIAS_NOT_FOUND` (404); `PROPERTY_E
 Synthetic reviews always have `source = synthetic-demo` and `is_synthetic = true`; they can never be labelled as
 coming from Booking.com.
 
-## Reviews (design only)
+## Reviews (implemented, Phase 5)
+
+List responses are `{ "data": [...], "meta": { "page", "page_size", "total" } }`. The endpoint shares the analytics
+filters (`property_ids`, `date_from`, `date_to`, `data_scope`, default `genuine`), so a count in the explorer matches
+the same count on the dashboard.
+
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/reviews` | Query params: `q`, `property_ids`, `date_from`, `date_to`, `rating_min`, `rating_max`, `sentiment`, `aspect`, `aspect_sentiment`, `language`, `sort` (`newest`/`oldest`/`rating_desc`/`rating_asc`), `page`, `page_size` (≤ 100) |
-| GET | `/api/reviews/{id}` | Original text + sentiment per segment + aspect mentions with evidence |
+| GET | `/api/reviews` | Extra params: `q` (max 200 characters; case-insensitive search of the liked, disliked, body and title text; `%` and `_` are matched literally), `rating_min`, `rating_max` (0-10; 422 `INVALID_FILTER` if min > max), `sentiment` (label of the overall review text), `aspect` (404 `ASPECT_NOT_FOUND` if unknown), `aspect_sentiment` (positive / neutral / negative; needs `aspect`, else 422 `INVALID_FILTER`; uses the same per-review stance as the aspect breakdown), `language`, `sort` = `newest` (default) / `oldest` / `rating_desc` / `rating_asc` (ties broken by id), `page`, `page_size` (1-100, default 25). Each item carries the review text, `analysis_status`, the overall `sentiment` and the review-level aspect stances |
+| GET | `/api/reviews/{id}` | The same item plus the sentiment of each text segment and every aspect mention with its verbatim `evidence_text`. 404 `REVIEW_NOT_FOUND` |
+
+**Deactivated properties** (`is_active = false`) are excluded from every analytics figure and from this list.
+Two fields were added so the dashboard never hard-codes a threshold: `overview.min_sample`
+(`MIN_SAMPLE_COMPARISON`) and `trends.min_sample` (`MIN_SAMPLE_TREND_WINDOW`).
 
 ## Analysis (implemented, Phase 4)
 

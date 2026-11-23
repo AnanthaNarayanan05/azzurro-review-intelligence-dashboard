@@ -35,7 +35,10 @@ class Filters:
     data_scope: DataScope = "genuine"
 
     def clauses(self) -> list[Any]:
-        clauses: list[Any] = []
+        # Deactivated properties are excluded from every figure ("Active (included in analytics)").
+        clauses: list[Any] = [
+            Review.property_id.in_(select(Property.id).where(Property.is_active.is_(True)))
+        ]
         if self.property_ids:
             clauses.append(Review.property_id.in_(self.property_ids))
         if self.date_from:
@@ -67,8 +70,11 @@ def _share(count: int, denominator: int) -> float | None:
 # Data scope
 # ------------------------------------------------------------------------------------------
 def data_summary(db: Session, f: Filters) -> dict[str, Any]:
+    active = Review.property_id.in_(select(Property.id).where(Property.is_active.is_(True)))
     rows = dict(
-        db.execute(select(Review.is_synthetic, func.count()).group_by(Review.is_synthetic)).all()
+        db.execute(
+            select(Review.is_synthetic, func.count()).where(active).group_by(Review.is_synthetic)
+        ).all()
     )
     low, high = db.execute(
         select(func.min(Review.review_date), func.max(Review.review_date)).where(*f.clauses())
@@ -174,7 +180,7 @@ def _status_counts(db: Session, f: Filters, group_by_property: bool = False):
 # ------------------------------------------------------------------------------------------
 # Aspects
 # ------------------------------------------------------------------------------------------
-def _aspect_review_labels(f: Filters, aspect_key: str | None = None) -> Select:
+def aspect_review_labels(f: Filters, aspect_key: str | None = None) -> Select:
     """One row per (review, aspect) with `balance` = positive mentions - negative mentions."""
     balance = func.sum(
         case(
@@ -213,7 +219,7 @@ def _analysed_review_count(db: Session, f: Filters) -> dict[int, int]:
 
 
 def _aspect_rows(db: Session, f: Filters, settings: Settings, *, by_property: bool) -> list[dict]:
-    sub = _aspect_review_labels(f).subquery()
+    sub = aspect_review_labels(f).subquery()
     group_cols = [sub.c.aspect_id] + ([sub.c.property_id] if by_property else [])
     stmt = select(
         *group_cols,
@@ -334,6 +340,7 @@ def overview(db: Session, f: Filters, settings: Settings) -> dict[str, Any]:
     return {
         "dataset": data_summary(db, f),
         "reviews": {"n": len(ratings), "with_text_analysis": sum(sentiment_counts.values())},
+        "min_sample": settings.min_sample_comparison,
         "rating": {
             **_rating_block(ratings, settings),
             "distribution": _rating_distribution(ratings),
@@ -388,7 +395,7 @@ def comparison(db: Session, f: Filters, settings: Settings) -> dict[str, Any]:
     rows = []
     for pid in sorted(wanted, key=lambda i: names[i].name if i in names else ""):
         prop = names.get(pid)
-        if prop is None:
+        if prop is None or not prop.is_active:
             continue
         values = ratings_by_property.get(pid, [])
         rows.append(
@@ -503,7 +510,7 @@ def _observations(
             .where(SentimentResult.segment == TextSegment.OVERALL.value, *f.clauses())
         )
         return [(d, 1.0 if label == target else 0.0) for d, label in db.execute(stmt)]
-    sub = _aspect_review_labels(f, aspect_key).subquery()
+    sub = aspect_review_labels(f, aspect_key).subquery()
     stmt = select(sub.c.review_date, sub.c.balance)
     return [(d, 1.0 if balance < 0 else 0.0) for d, balance in db.execute(stmt)]
 
@@ -567,6 +574,7 @@ def trends(
         "aspect": aspect_key,
         "as_of": as_of.isoformat(),
         "window_periods": window,
+        "min_sample": settings.min_sample_trend_window,
         "week_definition": "Monday to Sunday" if granularity == "week" else "calendar month",
         "series": series,
         "change": change,

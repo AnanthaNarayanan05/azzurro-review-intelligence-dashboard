@@ -4,12 +4,13 @@ An evidence-based review analytics platform that turns guest reviews for four ho
 measurable business intelligence: satisfaction KPIs, property comparison, aspect-level strengths and
 complaints, trends, and operational recommendations linked to the reviews that support them.
 
-> **Project status: Phase 4 complete – analytics engine.** Working now: CSV/XLSX import with preview, mapping,
-> validation, duplicate handling and undo; property management; labelled synthetic demo data; and the
-> analytics engine (sentiment, aspect mentions, comparison and trend statistics) behind a read-only API.
-> The **dashboard pages that display these analytics are not built yet** (Phase 5), nor are insights
-> (Phase 6). The sentiment and aspect methods are explainable baselines and have **not been evaluated**
-> against human labels (Phase 7). This README is updated as features are implemented and verified.
+> **Project status: Phase 5 complete – dashboard.** Working now: CSV/XLSX import with preview, mapping,
+> validation, duplicate handling and undo; property management; labelled synthetic demo data; the analytics
+> engine (sentiment, aspect mentions, comparison and trend statistics); and the dashboard pages that show it on
+> live data: Overview, Properties (list and detail), Comparison and a Reviews explorer, driven by URL-synced
+> filters. **Insights (Phase 6) are not built yet.** The sentiment and aspect methods are explainable baselines
+> and have **not been evaluated** against human labels (Phase 7). This README is updated as features are
+> implemented and verified.
 
 ## Features
 
@@ -23,8 +24,14 @@ Working:
   monthly trends. Every number carries its sample size; small samples return "insufficient data" instead of a guess
 - Settings page: property manager, text-analysis status with a working re-run, demo data
 
+- Dashboard on live data: executive overview (KPIs with sample sizes, rating distribution, sentiment split,
+  praised and criticised aspects with the real sentences behind them, trends), property list and detail,
+  comparison that names a best or worst property only when the difference is unlikely to be chance, and a
+  review explorer (search, filters, sort, paging, and a view showing the evidence behind each analysis)
+- Global filters (properties, dates, genuine / synthetic data) kept in the URL, so any view can be bookmarked or
+  shared; synthetic data is always labelled
+
 Planned:
-- Executive overview, per-property analytics, four-property comparison and review explorer pages (Phase 5)
 - Insights with supporting review counts, example reviews, period, suggested action and evidence strength (Phase 6)
 - Works fully without any paid AI service; optional LLM wording is grounded and validated
 
@@ -39,7 +46,7 @@ In use now: Next.js 16 · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui 
 Python 3.11 · FastAPI · Pydantic 2 · SQLAlchemy 2.1 · Alembic · SQLite · openpyxl (XLSX import) ·
 VADER (sentiment) · langdetect (language) · pytest · Vitest · Testing Library.
 
-Planned for later phases: Recharts (charts), Playwright (E2E), PostgreSQL (hosted).
+Charts are hand-written SVG/CSS (no chart library; each has a table view). Planned for later phases: Playwright (E2E), PostgreSQL (hosted).
 
 ## Documentation
 
@@ -88,9 +95,9 @@ Application Control workaround) are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 ## Testing
 
 ```powershell
-# from backend/  – 239 tests: API, errors, config, database integrity, ingestion, NLP, analysis runs, analytics
+# from backend/  – 268 tests: API, errors, config, database integrity, ingestion, NLP, analysis runs, analytics, review explorer
 .venv\Scripts\python.exe -m pytest
-# from frontend/ – 32 tests: API client, status UI, navigation, import wizard, analysis card
+# from frontend/ – 79 tests: API client, status UI, navigation, import wizard, analysis card, filters, charts, dashboard pages
 npm test
 ```
 

@@ -216,3 +216,65 @@ human-labelled sample can be supplied for evaluation (needed for Phase 7).
    trends charts (Recharts) with `insufficient_data` and incomplete-period states.
 5. Review explorer needs a `GET /api/reviews` endpoint (not built yet; see API_SPECIFICATION "Reviews").
 6. Component tests, browser verification of every control, docs + progress + commit + push.
+
+## 2026-11-24 – Phase 5: Dashboard
+
+**Branch:** `main`. **Commit:** see `git log` (`feat: build dashboard pages on live analytics - Phase 5`).
+
+**Completed**
+- Pages on live data, no static numbers: Overview, Properties (list and detail), Comparison, Reviews explorer.
+  Navigation entries enabled (Insights stays disabled until Phase 6).
+- Global filters in the URL (`properties`, `from`, `to`, `scope`; defaults omitted); a banner whenever the data is
+  not genuine-only; an inverted date range is explained and no request is sent.
+- Hand-written SVG/CSS charts (rating distribution, sentiment split, aspect split bars, rating intervals, trend line),
+  each with a table view and written labels (meaning is never carried by colour alone). Colours are `--viz-*` CSS
+  variables with light and dark values. Hollow points mark unfinished or low-sample periods; lines break at empty
+  periods.
+- Comparison names a best/worst property only when the API reports `ranked`; low-sample aspect cells are greyed.
+- Aspect drill-down shows the real sentences; the Reviews explorer has search, sentiment, rating range, aspect and
+  aspect-stance filters, sorting, paging and a drawer with segment scores and verbatim evidence.
+- Loading, empty and error (with retry) states on every data view.
+
+**Files:** backend `app/api/routes/reviews.py`, `app/schemas/reviews.py`, `tests/test_reviews_api.py`, changes in
+`app/analytics/metrics.py`, `app/api/router.py`, `pyproject.toml`; frontend `app/{overview,comparison,properties,reviews}`,
+`components/{charts,dashboard,filters,reviews,states}`, `hooks/use-{filters,analytics}.ts`, `lib/{filters,format,reviews-query}.ts`,
+`services/analytics.ts`, `types/analytics.ts`, `test/fixtures.ts`, `app/globals.css`, `lib/navigation.ts`.
+
+**Database changes:** none (no migration).
+
+**API changes:** new `GET /api/reviews` and `GET /api/reviews/{id}`; `min_sample` added to the overview and trends
+responses; deactivated properties are now excluded from all analytics (previously included).
+
+**Tests run (2026-11-24):** backend `pytest` **268 passed** (29 new); `ruff check` and `ruff format --check` clean;
+frontend `vitest` **79 passed** (47 new); `tsc --noEmit`, `eslint` and `next build` clean. Manual browser run on the
+465-review demo data: Overview, aspect drill-down, trends, Comparison, URL filters, explorer search/filter, review
+drawer, property detail.
+
+**Issues found and fixed:** a state-in-effect lint error in the explorer search box; stale CSS variables in the dev
+server (restart needed after `globals.css` edits); line-chart table omitted "low sample" for unfinished periods;
+a hardcoded sample threshold in the UI replaced with the API's `min_sample`; Radix Select needs jsdom stubs in tests.
+
+**Known limitations / bugs**
+- No automated browser tests, no keyboard/screen-reader audit, no visual regression, and the new pages were not
+  checked at 375 px width (Phase 7).
+- The demo data repeats identical sentences, so aspect example lists show duplicates; this is a property of the
+  synthetic data and was deliberately not de-duplicated.
+- Sentiment/aspect accuracy is still not evaluated (Phase 7). Settings has no new controls this phase (existing
+  property manager, analysis card and demo data remain).
+
+**Decisions**
+- Charts are hand-written (no Recharts): fewer dependencies for five simple chart types; docs updated.
+- Property identity is shown by label, not colour; thresholds come from the API.
+- Explorer counts use the same filter code as analytics so the numbers agree.
+
+**Open questions for the project owner (unchanged):** the real dataset, hosting/login requirements, LLM provider vs
+templates, assessment deadline, human-labelled sample for evaluation.
+
+**Next steps (Phase 6 – insights)**
+1. Design the insight model: finding, supporting review count, example review IDs, period, suggested action,
+   evidence strength (from sample size and interval overlap), stored with provenance.
+2. Rules engine over the Phase 4 analytics (aspect complaints above a threshold, significant trend changes,
+   property gaps); an insight is produced only when its evidence passes the thresholds.
+3. API `GET /api/insights` plus the Insights page linking each insight to its reviews in the explorer.
+4. LLM wording stays off by default; if added later, it must be grounded and validated, and cost needs approval.
+5. Tests, docs, progress, commit and push.

@@ -34,7 +34,7 @@ NLP and analytics.
                            ▼
  ┌──────────────────────── Next.js frontend ─────────────────────────┐
  │  App Router pages · TanStack Query data layer · shadcn/ui ·       │
- │  Recharts · URL-synced filters                                    │
+ │  hand-written SVG/CSS charts · URL-synced filters                 │
  └────────────────────────────────────────────────────────────────────┘
                            │
                            ▼
@@ -80,7 +80,7 @@ template text is kept.
 |---|---|---|
 | Frontend | Next.js (App Router) + TypeScript | Requested; strong routing/layout model; deploys easily to Vercel |
 | Styling/UI | Tailwind CSS + shadcn/ui + Lucide | Accessible Radix primitives, code is owned in-repo (no opaque template) |
-| Charts | Recharts | Declarative React charts, adequate for bar/line/stacked/distribution charts |
+| Charts | Hand-written SVG and CSS (no chart library) | Phase 5 decision: only five simple chart types are needed (distribution bars, split bars, line, interval, table), so a dependency was avoided. Each chart has a table view, hover details and written labels; colours are CSS variables (`--viz-*`) with light and dark values |
 | Data fetching | TanStack Query | Caching, loading/error states and refetch for free; avoids hand-rolled state |
 | Backend | Python 3.11 + FastAPI + Pydantic v2 | Python is where the NLP ecosystem is; FastAPI gives typed validation and OpenAPI docs |
 | ORM/migrations | SQLAlchemy 2.0 + Alembic | Parameterised queries (SQL-injection safe), same code on SQLite and PostgreSQL |

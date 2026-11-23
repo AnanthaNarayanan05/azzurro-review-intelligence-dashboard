@@ -1,0 +1,235 @@
+/** Shapes returned by `/api/analytics/*` and `/api/reviews`. See docs/API_SPECIFICATION.md. */
+
+export type DataScope = "genuine" | "synthetic" | "all";
+export type SentimentLabel = "positive" | "neutral" | "negative";
+
+export interface Dataset {
+  scope: DataScope;
+  genuine_reviews: number;
+  synthetic_reviews: number;
+  mixed: boolean;
+  first_review_date: string | null;
+  last_review_date: string | null;
+}
+
+/** A number never travels without its sample size. */
+export interface Measure {
+  value: number | null;
+  n: number;
+  missing: number;
+  low_sample: boolean;
+}
+
+export interface RatingMeasure extends Measure {
+  ci_low?: number | null;
+  ci_high?: number | null;
+}
+
+export interface DistributionBin {
+  label: string;
+  from: number;
+  to: number;
+  n: number;
+  share: number | null;
+}
+
+export interface SentimentBlock {
+  analysed_n: number;
+  positive: number;
+  neutral: number;
+  negative: number;
+  positive_share: number | null;
+  neutral_share: number | null;
+  negative_share: number | null;
+  share_denominator: string;
+  not_analysed: { no_text: number; non_english: number; pending: number };
+}
+
+export interface AspectRow {
+  aspect: string;
+  display_name: string;
+  mentions: number;
+  positive: number;
+  neutral: number;
+  negative: number;
+  positive_share: number | null;
+  negative_share: number | null;
+  mention_rate: number | null;
+  low_sample: boolean;
+  property_id?: number;
+}
+
+export interface AspectExample {
+  review_id: number;
+  property_id: number;
+  review_date: string;
+  is_synthetic: boolean;
+  sentiment: SentimentLabel;
+  evidence_text: string;
+  matched_term: string;
+  source_field: string;
+}
+
+export interface TopAspect extends AspectRow {
+  examples?: AspectExample[];
+}
+
+export interface PropertyRating {
+  property_id: number;
+  name: string;
+  reviews: number;
+  rating: Measure;
+}
+
+export interface Overview {
+  dataset: Dataset;
+  reviews: { n: number; with_text_analysis: number };
+  min_sample: number;
+  rating: Measure & { distribution: DistributionBin[]; scale: string };
+  sentiment: SentimentBlock;
+  properties: PropertyRating[];
+  aspects: { most_praised: AspectRow[]; most_criticised: AspectRow[]; min_mentions: number };
+}
+
+export interface PropertyDetail extends Overview {
+  top_praise: TopAspect[];
+  top_complaints: TopAspect[];
+}
+
+export interface ComparisonRow {
+  property_id: number;
+  name: string;
+  reviews: number;
+  rating: RatingMeasure;
+  sentiment: SentimentBlock;
+  aspects: AspectRow[];
+}
+
+export type RankingStatus = "ranked" | "difference_not_significant" | "insufficient_data";
+
+export interface Comparison {
+  dataset: Dataset;
+  properties: ComparisonRow[];
+  rating_ranking: {
+    status: RankingStatus;
+    reason: string | null;
+    best: number | null;
+    worst: number | null;
+    ordered: number[];
+  };
+  min_sample: number;
+  min_aspect_mentions: number;
+  note: string;
+}
+
+export interface AspectSummary {
+  items: AspectRow[];
+  analysed_reviews: number;
+  min_mentions: number;
+  definition: string;
+}
+
+export type TrendMetric =
+  | "volume"
+  | "avg_rating"
+  | "sentiment_positive_share"
+  | "sentiment_negative_share"
+  | "aspect_negative_share";
+export type Granularity = "week" | "month";
+
+export interface TrendPoint {
+  period_start: string;
+  period_end: string;
+  n: number;
+  value: number | null;
+  complete: boolean;
+  low_sample: boolean;
+}
+
+export type ChangeStatus =
+  | "increase"
+  | "decrease"
+  | "no_significant_change"
+  | "insufficient_data"
+  | "descriptive";
+
+export interface TrendWindow {
+  from: string;
+  to: string;
+  n: number;
+}
+
+export interface TrendChange {
+  status: ChangeStatus;
+  reason?: string;
+  recent_window: TrendWindow;
+  previous_window: TrendWindow;
+  recent_value?: number | null;
+  previous_value?: number | null;
+  difference?: number | null;
+  relative_change?: number | null;
+  ci_low?: number | null;
+  ci_high?: number | null;
+  practical_threshold?: number;
+}
+
+export interface Trends {
+  metric: TrendMetric;
+  granularity: Granularity;
+  aspect: string | null;
+  as_of: string;
+  window_periods: number;
+  min_sample: number;
+  week_definition: string;
+  series: TrendPoint[];
+  change: TrendChange;
+  dataset: Dataset;
+}
+
+export interface ReviewAspectLabel {
+  aspect: string;
+  display_name: string;
+  label: SentimentLabel;
+}
+
+export interface ReviewItem {
+  id: number;
+  property_id: number;
+  property_name: string;
+  review_date: string;
+  rating: number | null;
+  title: string | null;
+  positive_text: string | null;
+  negative_text: string | null;
+  body_text: string | null;
+  language: string | null;
+  source: string;
+  is_synthetic: boolean;
+  analysis_status: "analysed" | "no_text" | "non_english" | null;
+  sentiment: { label: SentimentLabel; score: number } | null;
+  aspects: ReviewAspectLabel[];
+}
+
+export interface ReviewMention {
+  aspect: string;
+  display_name: string;
+  label: SentimentLabel;
+  score: number;
+  source_field: string;
+  matched_term: string;
+  evidence_text: string;
+}
+
+export interface ReviewDetail extends ReviewItem {
+  language_detected: boolean;
+  traveller_type: string | null;
+  reviewer_country: string | null;
+  room_type: string | null;
+  stay_nights: number | null;
+  source_url: string | null;
+  imported_at: string;
+  segments: { segment: string; label: SentimentLabel; score: number; model_name: string }[];
+  mentions: ReviewMention[];
+}
+
+export type ReviewSort = "newest" | "oldest" | "rating_desc" | "rating_asc";

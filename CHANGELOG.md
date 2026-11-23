@@ -2,6 +2,32 @@
 
 All notable changes, newest first. Dates are when the work was completed.
 
+## Phase 5 - Dashboard (2026-11-24)
+
+### Added
+- Pages on live data: **Overview**, **Properties** (list) and **property detail**, **Comparison**, **Reviews**
+  explorer. Their navigation entries are now enabled.
+- Global filters kept in the URL: property chips, date range, data scope (genuine / synthetic / all). A banner is
+  shown whenever the data is not genuine-only. An inverted date range is explained and nothing is requested.
+- Charts (hand-written SVG/CSS, each with a table view and hover detail): rating distribution, sentiment split,
+  aspect split bars, rating intervals per property, trend line with hollow points for unfinished or thin periods.
+- Trends panel with measure, aspect and week/month selectors and a plain-language change summary.
+- Aspect drill-down to the real sentences behind each count.
+- Reviews explorer: text search, sentiment, rating range, aspect and aspect stance, sort, paging, and a drawer
+  showing segment scores and each aspect mention's evidence sentence.
+- Backend: `GET /api/reviews` and `GET /api/reviews/{id}`; `min_sample` on the overview and trends responses.
+
+### Changed
+- Deactivated properties are now excluded from every analytics figure and the review list.
+- Charts are hand-written instead of using Recharts (fewer dependencies; recorded in `SYSTEM_ARCHITECTURE.md`).
+
+### Not done / not claimed
+- Insights (Phase 6). No automated browser tests, accessibility audit or 375 px check of the new pages yet (Phase 7).
+- Sentiment and aspect accuracy are still not evaluated.
+
+### Tests
+- Backend 268 passed (29 new), frontend 79 passed (47 new); `ruff`, `tsc`, `eslint` and `next build` clean.
+
 ## Phase 4 - Analytics engine (2026-11-24)
 
 ### Added

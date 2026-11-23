@@ -24,6 +24,13 @@ Status: In progress. Results of each run are recorded in `PROJECT_PROGRESS.md`.
 - Manual browser run (2026-11-24, built-in browser): Settings → Load demo data analysed 465 reviews automatically (450 analysed, 15 non-English); **Re-analyse all reviews** ran and the card showed the new run in local time. Live API checks on the demo data returned in about 0.2 s per call.
 - **Not covered, not claimed:** accuracy of VADER and of the aspect lexicon (needs the human-labelled sample, Phase 7); recall of keyword matching; behaviour on the real dataset; PostgreSQL.
 
+**Implemented (Phase 5):**
+- Backend (pytest, **268 tests in total**, run 2026-11-24, all passing): `test_reviews_api.py` (29 new) covers the review list and detail endpoints (filters, search, sorting, paging, validation errors, evidence in the detail) and exclusion of deactivated properties from analytics.
+- Frontend (Vitest, **79 tests in total**, 47 new): URL filter parsing and serialisation (round trip, malformed values, defaults omitted, API parameter names, inverted dates); explorer parameters; chart components (KPI tile with n / missing / low-sample, dataset banner for each scope, sentiment bar, rating distribution, interval chart, line chart gaps / hollow points / table); filter bar (writes to the URL, reset, inverted dates explained); Overview (live values, URL filters sent to the API, empty state, error with working retry, no request while dates are invalid); Comparison (winner named only when ranked, no winner when not significant, insufficient data, low-sample aspect cells); Reviews explorer (filters sent to the API, sentiment filter through the URL and back to page 1, paging, no-match state, inverted rating range).
+- Gates: `ruff check` and `ruff format --check`, `tsc --noEmit`, `eslint` clean; `next build` succeeds with all new routes.
+- Manual browser run (built-in browser, 465-review demo data, 2026-11-24): Overview, aspect drill-down to real sentences, trend chart, Comparison, property filter chips writing to the URL, Reviews search and sentiment filters, the review drawer with evidence, and a property detail page.
+- **Not covered, not claimed:** automated browser (Playwright) tests; keyboard-only and screen-reader audit; visual regression; the new pages at 375 px width (responsive classes are used but were not checked in this phase).
+
 ## 1. Backend unit tests (pytest)
 
 | Area | Examples |

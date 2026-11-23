@@ -30,9 +30,9 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Analytics",
     items: [
       { href: "/overview", label: "Overview", icon: LayoutDashboard, phase: 5, available: true },
-      { href: "/properties", label: "Properties", icon: Building2, phase: 5, available: false },
-      { href: "/comparison", label: "Comparison", icon: GitCompareArrows, phase: 5, available: false },
-      { href: "/reviews", label: "Reviews", icon: MessageSquareText, phase: 5, available: false },
+      { href: "/properties", label: "Properties", icon: Building2, phase: 5, available: true },
+      { href: "/comparison", label: "Comparison", icon: GitCompareArrows, phase: 5, available: true },
+      { href: "/reviews", label: "Reviews", icon: MessageSquareText, phase: 5, available: true },
       { href: "/insights", label: "Insights", icon: Lightbulb, phase: 6, available: false },
     ],
   },
