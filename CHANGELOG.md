@@ -2,6 +2,27 @@
 
 All notable changes, newest first. Dates are when the work was completed.
 
+## Phase 7 - Testing and optimisation (2026-11-24)
+
+### Added
+- **Browser end-to-end tests** (`frontend/e2e`, Playwright driving the installed Chrome, `npm run e2e`): 9 tests cover the
+  whole story on a throwaway API and database: empty start, wizard import of the synthetic sample with reconciled
+  counts, matching Overview total with the synthetic label, filters, insight generation and its evidence link, layout at
+  375 and 768 px on all seven pages, and an axe-core accessibility audit of all pages.
+- **Performance benchmark** (`backend/scripts/benchmark.py`) and its documented results (NFR-3 met at ~50,000 reviews).
+- **Model evaluation tooling** (`backend/app/analytics/evaluation.py`, `backend/scripts/evaluate_models.py`) with 14
+  tests, and `docs/LABELLING_GUIDE.md`. **No accuracy has been measured**: it needs a human-labelled sample of real reviews.
+- `backend/scripts/e2e_server.py`: starts the API on a fresh temporary database for the browser tests.
+
+### Fixed (found by the new audits)
+- The "destructive" badge text (recurring-complaint insights, failed imports) had colour contrast below WCAG AA; darkened.
+- The aspect table's "Complaints" button had an accessible name that did not include its visible text; renamed.
+- Property cards placed non-definition elements directly inside a definition list; restructured.
+
+### Known issues recorded (see `docs/RISK_REGISTER.md` R33-R36)
+- Accuracy unmeasured; real-data import not done (no data supplied); one browser and automated accessibility rules only;
+  performance figures are for SQLite and repeated synthetic text; dev-only `npm audit` advisories (4 moderate) not force-fixed.
+
 ## Phase 6 - Insights (2026-11-24)
 
 ### Added

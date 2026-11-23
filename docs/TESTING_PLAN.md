@@ -1,6 +1,6 @@
 # Testing Plan
 
-Status: In progress. Results of each run are recorded in `PROJECT_PROGRESS.md`.
+Status: Phase 7 done for everything that does not need real data; model accuracy and real-data runs are still pending. Results of each run are recorded in `PROJECT_PROGRESS.md`.
 
 **Implemented (Phase 2):**
 - Backend (pytest, 26 tests): health endpoint (ok and degraded), error envelope for 404/405/422/500 with no
@@ -38,6 +38,23 @@ Status: In progress. Results of each run are recorded in `PROJECT_PROGRESS.md`.
 - Gates: `ruff check` and `ruff format --check`, `tsc --noEmit`, `eslint` clean; `next build` succeeds with the `/insights` route.
 - Manual browser run (built-in browser, 465-review demo data, synthetic scope): the page listed 15 insights with the synthetic label; expanding examples showed the verbatim sentences; "See all 20 reviews" opened the explorer with exactly 20 reviews; the type filter narrowed 15 to 6 strengths; Regenerate made a POST, showed a toast and refreshed the list; genuine scope showed the "no genuine reviews" explanation; the Overview teaser showed the top three with a link.
 - **Not covered, not claimed:** that the insights are useful or correct for real hotels (needs the real dataset and human review); trend insights on real data (none fire on the demo data); an LLM adapter (not built); automated browser (Playwright) tests; keyboard and screen-reader audit; the page at 375 px width.
+
+**Implemented (Phase 7):**
+- Backend (pytest, **330 tests in total**, run 2026-11-24, all passing): `test_evaluation.py` (14 new) checks the evaluation arithmetic (accuracy, per-class precision / recall / F1, macro-F1, confusion matrix, per-aspect detection, stance accuracy, parsing of the labelling sheet) against numbers worked out by hand, including the "no cases gives n/a, not 0" rule.
+- Frontend (Vitest, 94 tests, unchanged in number): three accessibility defects found by the new audit were fixed (below) and the existing tests still pass.
+- **End-to-end (Playwright, 9 tests, all passing, ~1 minute):** `frontend/e2e/workflow.spec.ts` drives the installed Google Chrome against a production build of the frontend and a real API on a brand-new throwaway database (ports 8100 / 3100, `backend/scripts/e2e_server.py`), so it never touches development data. One story: the app starts empty and shows no data as genuine; the committed synthetic sample is uploaded through the wizard (mapping, creating the four properties from the file's values, synthetic flag, confirmation); the report's counts add up (`total = imported + updated + duplicates + rejected`, 0 rejected); the Overview total equals the imported count and is labelled synthetic while the default genuine scope shows nothing; the Reviews explorer filters by property (the URL changes, the count falls) and a no-match search explains itself; insights are generated, a card's "See all N reviews" opens the explorer with exactly N reviews, and an example opens the full review; no page scrolls sideways at 375 px or 768 px; no automated accessibility violation on any page; removing the import leaves insights that the page flags as out of date. Run with `npm run e2e` from `frontend/`.
+- **Responsive check (automated):** all seven pages (Overview, Properties, Comparison, Reviews, Insights, Data Import, Settings), populated with 465 synthetic reviews, have no horizontal scrolling at 375 px and 768 px wide.
+- **Accessibility audit (automated, axe-core, WCAG 2.1 A and AA):** the first run found three rule violations, all fixed: (1) the "destructive" badge (insight type "recurring complaint", failed import) had text contrast below 4.5:1, so its text colour was darkened (affects Overview and Insights); (2) the "Complaints" button in the aspect table had an accessible name that did not contain its visible text, so the name is now "Complaints: examples for <aspect>" (and "Praise: examples for ..."); (3) the property cards put paragraph and badge elements directly inside a definition list, so they now sit inside the value element. After the fixes the audit reports no violations on any page.
+- **Performance check** (`python -m scripts.benchmark --reviews N`, SQLite on the development laptop, endpoints called in-process so network time is excluded, median of 5 runs):
+
+  | Reviews | Import (store) | Analysis | Slowest dashboard endpoint | Generate insights |
+  |---|---|---|---|---|
+  | 10,000 | 1.5 s | 9.2 s | 0.16 s (overview) | 1.6 s |
+  | 49,815 | 10.6 s | 43.9 s | 0.77 s (overview), 0.73 s (comparison) | 9.5 s |
+
+  At 50,000 reviews every dashboard endpoint stays under the 1 s target in NFR-3, and importing 10,000 rows takes well under the 60 s target. The two slowest endpoints (overview, comparison) are the ones that read every rating; they are the first place to optimise if the data grows beyond this. The text is generated demo text (a few dozen distinct sentences repeated), so this tests volume, not real-text behaviour; PostgreSQL has not been measured.
+- Model evaluation: the **tooling is built and tested but no accuracy has been measured**, because it needs a human-labelled sample of real reviews and none has been supplied (see section 5, `docs/LABELLING_GUIDE.md`, and `docs/AI_ANALYTICS.md` section 7).
+- **Not covered, not claimed:** real-data import and any accuracy figure; browsers other than Chrome; a screen-reader pass and a full keyboard-only walk-through (axe cannot judge these; only automated rules were run); visual regression; PostgreSQL; load from many simultaneous users.
 
 ## 1. Backend unit tests (pytest)
 
@@ -77,20 +94,25 @@ content hash), check constraints (rating range, labels), `total = imported + rej
 
 ## 5. Model evaluation
 
-On the human-labelled sample from the real dataset (see `AI_ANALYTICS.md` §7): accuracy, precision,
-recall, F1 (per class + macro), confusion matrix; aspect detection precision/recall. Script:
-`backend/scripts/evaluate_models.py`, output saved to `docs/` (aggregate metrics only, no private text).
+On the human-labelled sample from the real dataset (see `AI_ANALYTICS.md` §7 and `LABELLING_GUIDE.md`): accuracy,
+precision, recall, F1 (per class + macro), confusion matrix; aspect detection precision/recall and stance accuracy.
+**Built in Phase 7, not yet run on real labels.** Steps: `python -m scripts.evaluate_models export` writes a
+stratified sample sheet of genuine reviews; a person fills `human_sentiment` and `human_aspects`; `... evaluate
+--labelled <sheet>` prints and saves aggregate metrics (no review text) for `docs/AI_ANALYTICS.md`. Synthetic reviews
+are never sampled, and samples under 100 labelled reviews are flagged as too few to rely on.
 
 ## 6. Frontend tests
 
 - **Component tests (Vitest + Testing Library):** KPI tile renders n / low-sample flag; filter bar updates URL;
   tables paginate; upload wizard step validation; empty and error states.
 - **Manual checks:** responsive layouts at 375 / 768 / 1280 px; keyboard navigation; chart readability.
+  (375 and 768 px overflow and the axe accessibility audit are now automated in Playwright, see section 7.)
 
 ## 7. End-to-end (Playwright)
 
 Upload synthetic CSV → preview → map columns/properties → import → report shows correct counts →
 overview shows matching totals → filter reviews by property & aspect → open an insight and its evidence.
+**Implemented in Phase 7** (`frontend/e2e/workflow.spec.ts`, `npm run e2e`), plus responsive and axe checks on every page.
 
 ## 8. Test data policy
 

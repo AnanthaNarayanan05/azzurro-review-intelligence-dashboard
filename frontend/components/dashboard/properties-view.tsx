@@ -74,23 +74,27 @@ export function PropertiesView() {
                                 <dl className="grid grid-cols-2 gap-3">
                                   <div>
                                     <dt className="text-xs text-muted-foreground">Average rating (0–10)</dt>
-                                    <dd className="text-2xl font-semibold tabular-nums">
-                                      {formatRating(stats.rating.value)}
+                                    <dd>
+                                      <span className="block text-2xl font-semibold tabular-nums">
+                                        {formatRating(stats.rating.value)}
+                                      </span>
+                                      {stats.rating.low_sample && (
+                                        <Badge variant="outline" className="mt-1">
+                                          Low sample
+                                        </Badge>
+                                      )}
                                     </dd>
-                                    {stats.rating.low_sample && (
-                                      <Badge variant="outline" className="mt-1">
-                                        Low sample
-                                      </Badge>
-                                    )}
                                   </div>
                                   <div>
                                     <dt className="text-xs text-muted-foreground">Reviews in selection</dt>
-                                    <dd className="text-2xl font-semibold tabular-nums">
-                                      {formatCount(stats.reviews)}
+                                    <dd>
+                                      <span className="block text-2xl font-semibold tabular-nums">
+                                        {formatCount(stats.reviews)}
+                                      </span>
+                                      <span className="block text-xs text-muted-foreground">
+                                        {formatCount(stats.rating.n)} with a rating
+                                      </span>
                                     </dd>
-                                    <p className="text-xs text-muted-foreground">
-                                      {formatCount(stats.rating.n)} with a rating
-                                    </p>
                                   </div>
                                 </dl>
                               ) : (

@@ -350,3 +350,62 @@ LLM provider and cost (only if wording by an LLM is wanted), assessment deadline
 4. Responsive (375 px) and keyboard / screen-reader checks of every page; performance check on a larger dataset.
 5. Revisit insight thresholds with real data and feedback; decide on multiple-testing handling.
 6. Fix defects found; update docs, progress, commit and push.
+
+## 2026-11-24 – Phase 7: Testing and optimisation
+
+**Completed**
+- **Playwright end-to-end suite** (`frontend/playwright.config.ts`, `frontend/e2e/workflow.spec.ts`, `frontend/e2e/checks.ts`):
+  9 tests, all passing in about a minute. It starts its own API (`backend/scripts/e2e_server.py`: fresh temporary SQLite
+  database plus migrations, port 8100) and a production build of the frontend (port 3100), and drives the installed Google
+  Chrome (no browser download). Covers: empty start, wizard import of `data/sample/synthetic_reviews_sample.csv` (465 rows,
+  counts reconcile, 0 rejected), Overview total equals imported and is labelled synthetic (genuine scope stays empty),
+  property filter and no-match search, insight generation and evidence link (N claimed = N shown), no sideways scrolling at
+  375 and 768 px on all seven pages, axe-core WCAG 2.1 A/AA audit of all pages, and "out of date" flag after removing the import.
+- **Accessibility fixes** from the first axe run: badge text contrast (`components/ui/badge.tsx`), the "Complaints" button's
+  accessible name (`aspects-section.tsx`), and definition-list structure on property cards (`properties-view.tsx`).
+- **Performance benchmark** (`backend/scripts/benchmark.py`): 10,000 reviews: import 1.5 s, analysis 9.2 s, slowest endpoint
+  0.16 s. 49,815 reviews: import 10.6 s, analysis 43.9 s, slowest endpoint 0.77 s (overview), insights generated in 9.5 s.
+  NFR-3 (under 1 s to ~50k reviews; 10k import under 60 s) is met on SQLite. Caveats: in-process timings, repeated synthetic
+  text, one laptop, no PostgreSQL.
+- **Evaluation tooling** (`backend/app/analytics/evaluation.py`, `backend/scripts/evaluate_models.py`, `docs/LABELLING_GUIDE.md`,
+  `backend/tests/test_evaluation.py`, 14 tests): export a stratified sample of genuine reviews, a person labels it, then
+  evaluate reports accuracy, per-class precision / recall / F1, macro-F1, confusion matrix, per-aspect detection and stance accuracy.
+  **It has not been run on real labels, so no accuracy figure exists or is claimed.**
+- Docs: TESTING_PLAN (Phase 7 results), AI_ANALYTICS section 7 (status and method), ROADMAP, RISK_REGISTER (R33-R36),
+  REQUIREMENTS (NFR-3 measured), README, CHANGELOG.
+
+**Database changes:** none. **API changes:** none.
+
+**Tests run (2026-11-24):** backend `pytest` **330 passed** (14 new), `ruff check` and `ruff format --check` clean;
+frontend `vitest` **94 passed**, `tsc --noEmit` and `eslint` clean, `next build` succeeds (run by the e2e web server);
+`npm run e2e` **9 passed**.
+
+**Issues found and fixed:** the three accessibility defects above. The E2E test of the confirm dialog first failed only
+because the dialog is an `alertdialog` (test selector, not an app bug). Removing an import leaves insights flagged
+out of date, as designed (no bug).
+
+**Known limitations / bugs**
+- **No real dataset has been supplied**, so real-data import and the labelled-sample accuracy evaluation were not done.
+  Accuracy of VADER and the aspect lexicon remains unknown (R33).
+- The LLM adapter is still not built (needs provider and cost approval).
+- Browser tests run in Chrome only; accessibility was checked with automated rules, not a screen reader or a full
+  keyboard-only walk-through (R35).
+- Overview and comparison endpoints take about 0.75 s at 50,000 reviews on SQLite (rating aggregation is done in Python):
+  within the target but with little headroom (R34).
+- `npm audit`: 4 moderate advisories, all in the `shadcn` CLI's dev dependency chain (0 in production dependencies); not force-fixed (R36).
+
+**Decisions**
+- E2E uses separate ports, a throwaway database and a production build so it can never touch development data or race the dev server.
+- Evaluation never samples synthetic reviews and reports n/a (not 0) where there is nothing to divide by.
+- The performance benchmark runs in-process against SQLite; PostgreSQL measurement is left to Phase 8.
+
+**Open questions for the project owner (unchanged):** the real dataset and its format, hosting and login requirements,
+LLM provider and cost (only if wording by an LLM is wanted), assessment deadline, and a human-labelled sample for evaluation.
+
+**Next steps**
+1. If real reviews arrive: import them, generate insights on genuine scope and review each by hand; run
+   `scripts.evaluate_models export`, have a person label it (`docs/LABELLING_GUIDE.md`), run `evaluate`, and write the
+   figures into `docs/AI_ANALYTICS.md` section 7; revise the neutral-sentence rule and lexicon if results are poor.
+2. Phase 8 (deployment and handover): decide hosting (check current free-tier limits and cost with the owner first),
+   PostgreSQL and re-run the test suite and benchmark against it, environment configuration, deploy, verify live, handover docs.
+3. Before any public release: a manual keyboard and screen-reader pass.

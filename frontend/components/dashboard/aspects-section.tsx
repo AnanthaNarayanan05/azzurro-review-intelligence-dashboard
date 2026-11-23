@@ -243,7 +243,7 @@ export function AspectsSection({ filters, top }: AspectsSectionProps) {
                                   size="xs"
                                   disabled={row.positive === 0}
                                   onClick={() => select(row, "positive")}
-                                  aria-label={`Praise examples for ${row.display_name}`}
+                                  aria-label={`Praise: examples for ${row.display_name}`}
                                 >
                                   Praise
                                 </Button>
@@ -252,7 +252,7 @@ export function AspectsSection({ filters, top }: AspectsSectionProps) {
                                   size="xs"
                                   disabled={row.negative === 0}
                                   onClick={() => select(row, "negative")}
-                                  aria-label={`Complaint examples for ${row.display_name}`}
+                                  aria-label={`Complaints: examples for ${row.display_name}`}
                                 >
                                   Complaints
                                 </Button>

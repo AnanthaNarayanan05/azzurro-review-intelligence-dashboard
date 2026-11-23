@@ -65,7 +65,7 @@ _Status (Phase 6):_ FR-N1, FR-N2 and FR-N4 are implemented and tested. FR-N3's o
 
 - **NFR-1 Correctness** – Analytics match hand-calculated results on the validation fixture.
 - **NFR-2 Reproducibility** – Same input + same configuration ⇒ identical metrics.
-- **NFR-3 Performance** – Dashboard API responses < 1 s for up to ~50k reviews on SQLite locally; import of 10k rows < 60 s with VADER.
+- **NFR-3 Performance** – Dashboard API responses < 1 s for up to ~50k reviews on SQLite locally; import of 10k rows < 60 s with VADER. *Measured in Phase 7 (SQLite, synthetic data, in-process; see `TESTING_PLAN.md`): slowest endpoint 0.77 s at 49,815 reviews; 10k rows imported in 1.5 s and analysed in 9.2 s.*
 - **NFR-4 Security** – Upload type/size limits, parameterised queries (ORM), secrets only in env vars, no internal errors leaked to clients, no guest names stored.
 - **NFR-5 Usability** – Responsive (≥ 360 px), keyboard-accessible controls, loading/empty/error states for every data view.
 - **NFR-6 Maintainability** – Typed code (TypeScript, Pydantic, type hints), modular analytics, tests in CI-ready form.

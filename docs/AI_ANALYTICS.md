@@ -133,7 +133,23 @@ The arithmetic is checked against hand-calculated results: `backend/tests/fixtur
 and asserted in `backend/tests/test_analytics_api.py`. This verifies the *calculations*; it says nothing
 about how accurate VADER or the lexicon are (section 7).
 
-## 7. Evaluation methodology (planned - Phase 7)
+## 7. Evaluation methodology (tooling built in Phase 7; **no results yet**)
+
+> **Status:** the measuring tools exist and are unit-tested (`app/analytics/evaluation.py`,
+> `backend/scripts/evaluate_models.py`, `docs/LABELLING_GUIDE.md`), but they have **not been run on a human-labelled
+> sample**, because no real reviews or labels have been supplied. **No accuracy, precision, recall or F1 figure is
+> claimed for the sentiment engine or the aspect lexicon.** Results will be added below, with sample size and date,
+> only after a person has labelled about 150-200 genuine reviews.
+
+### How to run it
+1. `python -m scripts.evaluate_models export --size 150` writes a sheet of genuine reviews (stratified by property and
+   rating band, fixed seed, synthetic reviews excluded) with no system output on it, so labelling is not biased.
+2. A person fills `human_sentiment` and `human_aspects` using `docs/LABELLING_GUIDE.md`.
+3. `python -m scripts.evaluate_models evaluate --labelled <sheet>` computes the metrics below on the same code path the
+   dashboard uses (same pre-processing, VADER thresholds, neutral-sentence rule and aspect lexicon), and saves an
+   aggregate-only report that is safe to copy here.
+
+### Method
 
 - **Labelled sample:** stratified random sample of ~150–200 real reviews across properties and ratings,
   labelled for overall sentiment and aspect mentions by a human (ideally the project owner), using a
@@ -141,7 +157,15 @@ about how accurate VADER or the lexicon are (section 7).
 - **Sentiment metrics:** accuracy, per-class precision/recall/F1, macro-F1, confusion matrix.
 - **Aspect metrics:** per-aspect precision and recall of mention detection; accuracy of aspect sentiment
   on correctly detected mentions.
+- Details of the arithmetic: a class with no human examples is left out of the macro average (not counted as 0); a metric
+  with nothing to divide by is shown as n/a, not 0; if humans found cases and the system predicted none, F1 is 0; samples of
+  fewer than 100 labelled reviews are flagged as too few to rely on; non-English or empty reviews are reported separately
+  because the dashboard does not analyse them either.
 - Results, sample size and date of evaluation are written into this document. Until then, no accuracy is claimed.
+
+### Results
+
+_None yet. Add the aggregate tables from `evaluation_report.md` here once a labelled sample exists._
 - Synthetic data is used **only** for software testing, never to report model accuracy.
 
 ## 8. Insight generation (Phase 6 - implemented)

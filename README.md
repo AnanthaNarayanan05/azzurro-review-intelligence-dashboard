@@ -4,14 +4,16 @@ An evidence-based review analytics platform that turns guest reviews for four ho
 measurable business intelligence: satisfaction KPIs, property comparison, aspect-level strengths and
 complaints, trends, and operational recommendations linked to the reviews that support them.
 
-> **Project status: Phase 6 complete – insights.** Working now: CSV/XLSX import with preview, mapping,
+> **Project status: Phase 7 (testing) complete except what needs real data.** Working now: CSV/XLSX import with preview, mapping,
 > validation, duplicate handling and undo; property management; labelled synthetic demo data; the analytics
 > engine (sentiment, aspect mentions, comparison and trend statistics); and the dashboard pages that show it on
 > live data: Overview, Properties (list and detail), Comparison and a Reviews explorer, driven by URL-synced
 > filters; and evidence-based **Insights** written from fixed rules and templates, each linked to the real
 > reviews behind it (no AI text service is used or needed). The sentiment and aspect methods are explainable
-> baselines and have **not been evaluated** against human labels (Phase 7). This README is updated as features are
-> implemented and verified.
+> baselines and have **not been evaluated** against human labels: the evaluation tooling is built and tested, but it
+> needs a labelled sample of real reviews, so no accuracy figure is claimed. A browser end-to-end test, responsive and
+> accessibility checks and a performance benchmark now exist. This README is updated as features are implemented and
+> verified.
 
 ## Features
 
@@ -100,10 +102,22 @@ Application Control workaround) are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 ## Testing
 
 ```powershell
-# from backend/  – 316 tests: API, errors, config, database integrity, ingestion, NLP, analysis runs, analytics, review explorer, insights
+# from backend/  – 330 tests: API, errors, config, database integrity, ingestion, NLP, analysis runs, analytics, review explorer, insights, evaluation metrics
 .venv\Scripts\python.exe -m pytest
 # from frontend/ – 94 tests: API client, status UI, navigation, import wizard, analysis card, filters, charts, dashboard pages, insights
 npm test
+# from frontend/ – 9 browser tests (Playwright + installed Chrome): import to dashboard to insight, 375/768 px layout, accessibility.
+# Starts its own API on a throwaway database (ports 8100/3100); stop the dev servers first. First run builds the app (~1 min).
+npm run e2e
+```
+
+Other Phase 7 tools (run from `backend/`):
+
+```powershell
+# time import, analysis, endpoints and insights on N synthetic reviews (temporary database)
+.venv\Scripts\python.exe -m scripts.benchmark --reviews 50000
+# measure sentiment/aspect accuracy against a person's labels – see docs/LABELLING_GUIDE.md
+.venv\Scripts\python.exe -m scripts.evaluate_models export --size 150
 ```
 
 ## Repository layout
