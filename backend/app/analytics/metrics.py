@@ -218,7 +218,7 @@ def _analysed_review_count(db: Session, f: Filters) -> dict[int, int]:
     return dict(db.execute(stmt).all())
 
 
-def _aspect_rows(db: Session, f: Filters, settings: Settings, *, by_property: bool) -> list[dict]:
+def aspect_rows(db: Session, f: Filters, settings: Settings, *, by_property: bool) -> list[dict]:
     sub = aspect_review_labels(f).subquery()
     group_cols = [sub.c.aspect_id] + ([sub.c.property_id] if by_property else [])
     stmt = select(
@@ -258,7 +258,7 @@ def _aspect_rows(db: Session, f: Filters, settings: Settings, *, by_property: bo
 
 
 def aspect_summary(db: Session, f: Filters, settings: Settings) -> dict[str, Any]:
-    items = _aspect_rows(db, f, settings, by_property=False)
+    items = aspect_rows(db, f, settings, by_property=False)
     return {
         "items": items,
         "analysed_reviews": sum(_analysed_review_count(db, f).values()),
@@ -389,7 +389,7 @@ def comparison(db: Session, f: Filters, settings: Settings) -> dict[str, Any]:
     for pid, status, n in _status_counts(db, f, group_by_property=True):
         status_by_property[pid][status] = n
     aspect_by_property: dict[int, list[dict]] = defaultdict(list)
-    for item in _aspect_rows(db, f, settings, by_property=True):
+    for item in aspect_rows(db, f, settings, by_property=True):
         aspect_by_property[item["property_id"]].append(item)
 
     rows = []

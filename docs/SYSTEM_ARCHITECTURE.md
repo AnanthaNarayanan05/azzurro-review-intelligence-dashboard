@@ -122,7 +122,8 @@ Next.js 16.4, React 19.3, FastAPI 0.165, SQLAlchemy 2.1, Pydantic 2.14).
 | Frontend: app shell, responsive navigation, typed API client, live service status | Implemented (Phase 2) |
 | Ingestion: parsing, mapping, validation, de-duplication, import reports, undo, property aliases, synthetic demo data (API plus Data Import and Settings pages) | Implemented (Phase 3) |
 | Analysis: preprocessing, VADER sentiment, aspect lexicon, stored analysis runs (`app/analytics/nlp`, `app/services/analysis.py`), metrics and statistics (`app/analytics/metrics.py`, `stats.py`), analysis and analytics APIs, Settings "Text analysis" card | Implemented (Phase 4) |
-| Insights, dashboard pages | Not started (Phases 5–6) |
+| Dashboard pages: Overview, Properties, Comparison, Reviews explorer (hand-written charts, URL-synced filters) | Implemented (Phase 5) |
+| Insights: rules engine, evidence selection, template wording, action catalogue, grounding validator (`app/services/insights`), insights API, Insights page and Overview teaser. No LLM adapter | Implemented (Phase 6) |
 
 Analysis flow: import commit (or demo load) → `analyse_after_import` → `run_analysis` writes sentiment rows, aspect
 mentions and review statuses in one transaction → analytics endpoints read the stored rows. Metrics are computed from

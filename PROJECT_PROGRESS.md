@@ -278,3 +278,75 @@ templates, assessment deadline, human-labelled sample for evaluation.
 3. API `GET /api/insights` plus the Insights page linking each insight to its reviews in the explorer.
 4. LLM wording stays off by default; if added later, it must be grounded and validated, and cost needs approval.
 5. Tests, docs, progress, commit and push.
+
+
+## 2026-11-24 – Phase 6: Insights
+
+**Branch:** `main`. **Commit:** see `git log` (`feat: add evidence-based insights - Phase 6`).
+
+**Completed**
+- Rules engine (`backend/app/services/insights/rules.py`) over the stored analytics: recurring complaint (>= 10
+  negative and >= 40 % negative), strength (>= 80 % positive), opportunity (negative and positive each >= 30 %, below
+  the complaint line), property-specific issue (difference of proportions against the pooled other properties; interval
+  excludes zero, >= 5 points, >= 30 per side), emerging negative trend (monthly change from the Phase 4 trend code; >= 60
+  mentions) and cross-property issue. "Now" is the latest review in scope.
+- Evidence selection and grading (`evidence.py`): full supporting count, up to 10 verbatim sentences (one per review,
+  distinct wording preferred), strong / moderate / limited.
+- Template wording plus per-aspect action catalogue (`wording.py`, `insight_actions.json`).
+- Grounding validator (`grounding.py`) applied to every text, templates included; rejected drafts are counted, not stored.
+- `generate.py`: builds first, then replaces the old insights of the scope in one transaction (a failure keeps the old ones).
+- API: `GET /api/insights`, `GET /api/insights/{id}`, `POST /api/insights/generate`.
+- Frontend: Insights page (type and evidence filters, Generate / Regenerate, out-of-date warning, expandable examples,
+  "See all N reviews", paging, empty states), Overview "Top insights" teaser, navigation entry enabled, `FilterBar showDates`.
+
+**Files:** backend `app/services/insights/{__init__,generate,rules,evidence,wording,grounding}.py`,
+`app/services/insights/insight_actions.json`, `app/api/routes/insights.py`, `app/schemas/insights.py`,
+`app/models/{base,insight}.py`, `app/analytics/metrics.py`, `app/api/router.py`,
+`migrations/versions/20261124_b7c1e5a90d42_insight_data_scope.py`, `tests/{insight_helpers,test_insights}.py`; frontend
+`app/insights/page.tsx`, `components/insights/*`, `components/filters/filter-bar.tsx`, `components/dashboard/overview-view.tsx`,
+`hooks/use-insights.ts`, `services/insights.ts`, `lib/{insights,format,navigation}.ts`, `types/analytics.ts`, tests and
+`test/insight-fixtures.ts`.
+
+**Database changes:** `insights.data_scope` (VARCHAR(16), NOT NULL, default `genuine`, CHECK, index); migration
+`b7c1e5a90d42` applied to the dev database and round-tripped.
+
+**API changes:** the three insights endpoints above. `POST /api/insights/generate` takes `{data_scope}`; there is no
+`use_llm` option.
+
+**Tests run (2026-11-24):** backend `pytest` **316 passed** (48 new); `ruff check` and `ruff format --check` clean;
+frontend `vitest` **94 passed** (15 new); `tsc --noEmit`, `eslint` and `next build` clean. Manual browser run on the demo
+data (details in `docs/TESTING_PLAN.md`): 15 synthetic-labelled insights, examples, evidence link total matched (20),
+filter, regenerate, genuine-scope empty state, Overview teaser.
+
+**Issues found and fixed:** the first demo run produced 22 of 31 insights as "opportunity" noise, so the opportunity
+floor went from 20 % to 30 % (recorded as an unvalidated judgement call, risk R30); "wi-fi" was lower-cased in titles
+(`inline_name` keeps capitals when a name has them); the navigation test asserted that some page is unbuilt and broke
+when the last one was built (it now supplies its own planned entry).
+
+**Known limitations / bugs**
+- **The LLM adapter is not built.** It needs the project owner's choice of provider and cost approval; insights are
+  template-written.
+- No trend insight fires on the demo data (windows need >= 30 mentions each); the generation result reports the skipped
+  comparisons. A recurring complaint and a property-specific issue can both appear for the same property and aspect.
+- Thresholds are unvalidated starting points; many rules are checked at once and no multiple-testing correction is applied.
+- The demo data repeats identical sentences, so example lists show repeats.
+- The dev database holds synthetic-scope insights generated during testing (derived data; regenerate to refresh).
+- The dev server logs harmless Next.js HMR websocket errors in the browser console.
+- Still no automated browser tests, accessibility audit or 375 px check (Phase 7).
+
+**Decisions**
+- Insights are generated on request per data scope and replace the previous set, so they are reproducible and never
+  silently mixed across genuine and synthetic data.
+- The same grounding validator guards templates, so a future LLM adapter has a ready test to pass.
+- Insights are not date-filtered on the page: each carries its own period.
+
+**Open questions for the project owner (unchanged):** the real dataset and its format, hosting and login requirements,
+LLM provider and cost (only if wording by an LLM is wanted), assessment deadline, a human-labelled sample for evaluation.
+
+**Next steps (Phase 7 – testing and optimisation)**
+1. If the real dataset arrives, import it, regenerate insights on genuine scope and review each insight by hand.
+2. Evaluate sentiment and aspect detection against a human-labelled sample; report accuracy only from that.
+3. Playwright end-to-end test: import to dashboard to insight to evidence.
+4. Responsive (375 px) and keyboard / screen-reader checks of every page; performance check on a larger dataset.
+5. Revisit insight thresholds with real data and feedback; decide on multiple-testing handling.
+6. Fix defects found; update docs, progress, commit and push.

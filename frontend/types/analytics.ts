@@ -233,3 +233,99 @@ export interface ReviewDetail extends ReviewItem {
 }
 
 export type ReviewSort = "newest" | "oldest" | "rating_desc" | "rating_asc";
+
+// ---------------------------------------------------------------------------------------------
+// Insights (Phase 6)
+// ---------------------------------------------------------------------------------------------
+export type InsightType =
+  | "recurring_complaint"
+  | "strength"
+  | "emerging_negative_trend"
+  | "property_issue"
+  | "cross_property_issue"
+  | "opportunity";
+
+export type EvidenceStrength = "strong" | "moderate" | "limited";
+
+/** The exact filter that reproduces an insight's supporting reviews. */
+export interface InsightFilters {
+  property_ids: number[];
+  aspect: string;
+  aspect_sentiment: SentimentLabel | null;
+  date_from: string;
+  date_to: string;
+  data_scope: DataScope;
+}
+
+export interface InsightEvidence {
+  review_id: number;
+  excerpt: string;
+  rank: number;
+  property_id: number;
+  property_name: string;
+  review_date: string;
+  rating: number | null;
+  is_synthetic: boolean;
+}
+
+export interface InsightMetrics {
+  rule: InsightType;
+  filters: InsightFilters;
+  thresholds: Record<string, number | string>;
+  evidence: { supporting_reviews: number; months_spanned: number; strength_rule: string };
+  generation: {
+    as_of: string | null;
+    analysis_run_id: number | null;
+    reviews_in_scope: number;
+    sentiment_engine: string | null;
+    lexicon_version: string | null;
+  };
+  [key: string]: unknown;
+}
+
+export interface Insight {
+  id: number;
+  insight_type: InsightType;
+  scope: "portfolio" | "property" | "multi_property";
+  data_scope: DataScope;
+  aspect: { key: string; display_name: string } | null;
+  title: string;
+  explanation: string;
+  recommended_action: string;
+  supporting_review_count: number;
+  period_start: string;
+  period_end: string;
+  evidence_strength: EvidenceStrength;
+  generation_method: "template" | "llm";
+  generated_at: string;
+  properties: { id: number; name: string }[];
+  evidence: InsightEvidence[];
+  metrics: InsightMetrics;
+}
+
+export interface InsightList {
+  data: Insight[];
+  meta: {
+    page: number;
+    page_size: number;
+    total: number;
+    data_scope: DataScope;
+    generated_at: string | null;
+    stale: boolean;
+    analysis_run_id: number | null;
+    dataset: Dataset;
+  };
+}
+
+export interface GenerationResult {
+  data_scope: DataScope;
+  as_of: string | null;
+  created: number;
+  replaced: number;
+  rejected_by_validator: number;
+  by_type: Partial<Record<InsightType, number>>;
+  checked_property_aspects: number;
+  below_mention_floor: number;
+  comparisons_skipped_too_few: number;
+  notes: string[];
+}

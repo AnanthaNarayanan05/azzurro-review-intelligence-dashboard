@@ -176,6 +176,7 @@ aggregated); the individual sentences are kept as evidence.
 | period_start / period_end | DATE | NOT NULL |
 | evidence_strength | VARCHAR(8) | CHECK IN (`strong`,`moderate`,`limited`) |
 | metrics | JSON | NOT NULL (the exact computed numbers the text refers to) |
+| data_scope | VARCHAR(16) | NOT NULL, default `genuine`, CHECK IN (`genuine`,`synthetic`,`all`), indexed (added in Phase 6, migration `b7c1e5a90d42`): which reviews the insight was made from |
 | generation_method | VARCHAR(16) | `template` / `llm` |
 | llm_model | VARCHAR(64) | NULL |
 | generated_at | TIMESTAMP | NOT NULL |

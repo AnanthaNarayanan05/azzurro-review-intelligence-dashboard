@@ -1,0 +1,51 @@
+{
+  "version": "1.0.0",
+  "notes": "Suggested actions are starting points for a manager to judge. They are not findings from the reviews. Keyed by aspect key; 'default' is used for any aspect without its own entry. Texts must not contain digits.",
+  "default": {
+    "complaint": "Read the guest comments linked to this insight, confirm the cause on site, and agree an owner and a follow-up check.",
+    "strength": "Find out what the team does well here and make sure it is written down and protected when staff or suppliers change.",
+    "opportunity": "Compare the comments of satisfied and dissatisfied guests to see what differs, then test one small change."
+  },
+  "aspects": {
+    "cleanliness": {
+      "complaint": "Review the housekeeping checklist and room inspection routine, and spot-check the areas guests mention most.",
+      "strength": "Keep the current housekeeping standards and inspection routine, and recognise the team.",
+      "opportunity": "Check which rooms or areas are mentioned negatively and adjust inspection for those."
+    },
+    "staff_service": {
+      "complaint": "Share the specific comments with the team, review staffing at the busiest times, and consider refresher guest-service training.",
+      "strength": "Recognise the staff mentioned by guests and keep the practices that earn this praise.",
+      "opportunity": "Look at when service is praised and when it is criticised to find gaps in cover or handovers."
+    },
+    "location": {
+      "complaint": "Check whether guests lack clear directions, transport information or neighbourhood guidance, and add it to pre-arrival messages.",
+      "strength": "Keep highlighting the location, with practical local tips, in listings and pre-arrival messages.",
+      "opportunity": "Add short local guidance so guests who find the area less convenient know what to expect."
+    },
+    "room_comfort": {
+      "complaint": "Inspect the beds, bedding, noise insulation and temperature control in the rooms guests mention, and plan maintenance or replacement.",
+      "strength": "Protect the room standards guests value when planning refurbishments.",
+      "opportunity": "Identify which rooms attract the complaints and prioritise those for maintenance."
+    },
+    "facilities": {
+      "complaint": "Check the condition and availability of the facilities guests mention, and communicate any known limits clearly before arrival.",
+      "strength": "Keep the facilities well maintained and mention them in listings.",
+      "opportunity": "Check opening hours, upkeep and signage for the facilities where opinion is split."
+    },
+    "food_breakfast": {
+      "complaint": "Review breakfast quality, replenishment and the serving schedule, and check how busy periods are handled.",
+      "strength": "Keep the breakfast offer and quality checks that guests value.",
+      "opportunity": "Look at timing, choice and replenishment to see what separates good breakfast experiences from poor ones."
+    },
+    "value_for_money": {
+      "complaint": "Compare what guests expect for the price with what is delivered, and review pricing, inclusions or how the offer is described.",
+      "strength": "Keep the balance of price and quality that guests recognise, and be careful with changes that could upset it.",
+      "opportunity": "Check whether the listing sets the right expectations for the price."
+    },
+    "wifi_connectivity": {
+      "complaint": "Test Wi-Fi coverage and speed in guest rooms, and check the equipment and the internet connection.",
+      "strength": "Keep the current network setup and test it regularly.",
+      "opportunity": "Test the connection in the rooms where guests report problems."
+    }
+  }
+}

@@ -4,12 +4,13 @@ An evidence-based review analytics platform that turns guest reviews for four ho
 measurable business intelligence: satisfaction KPIs, property comparison, aspect-level strengths and
 complaints, trends, and operational recommendations linked to the reviews that support them.
 
-> **Project status: Phase 5 complete – dashboard.** Working now: CSV/XLSX import with preview, mapping,
+> **Project status: Phase 6 complete – insights.** Working now: CSV/XLSX import with preview, mapping,
 > validation, duplicate handling and undo; property management; labelled synthetic demo data; the analytics
 > engine (sentiment, aspect mentions, comparison and trend statistics); and the dashboard pages that show it on
 > live data: Overview, Properties (list and detail), Comparison and a Reviews explorer, driven by URL-synced
-> filters. **Insights (Phase 6) are not built yet.** The sentiment and aspect methods are explainable baselines
-> and have **not been evaluated** against human labels (Phase 7). This README is updated as features are
+> filters; and evidence-based **Insights** written from fixed rules and templates, each linked to the real
+> reviews behind it (no AI text service is used or needed). The sentiment and aspect methods are explainable
+> baselines and have **not been evaluated** against human labels (Phase 7). This README is updated as features are
 > implemented and verified.
 
 ## Features
@@ -31,9 +32,13 @@ Working:
 - Global filters (properties, dates, genuine / synthetic data) kept in the URL, so any view can be bookmarked or
   shared; synthetic data is always labelled
 
+- Insights: recurring complaints, strengths, property-specific and cross-property issues, emerging trends and
+  split-opinion opportunities. Each shows its counts, period, evidence strength, a suggested action, verbatim example
+  sentences, and a link that opens exactly the reviews it counted. A grounding validator rejects any text whose numbers or
+  review references the data does not support. Insights from synthetic demo data are labelled
+
 Planned:
-- Insights with supporting review counts, example reviews, period, suggested action and evidence strength (Phase 6)
-- Works fully without any paid AI service; optional LLM wording is grounded and validated
+- Optional LLM wording (only after the project owner approves a provider and its cost; it must pass the same validator)
 
 ## Architecture (summary)
 
@@ -95,9 +100,9 @@ Application Control workaround) are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 ## Testing
 
 ```powershell
-# from backend/  – 268 tests: API, errors, config, database integrity, ingestion, NLP, analysis runs, analytics, review explorer
+# from backend/  – 316 tests: API, errors, config, database integrity, ingestion, NLP, analysis runs, analytics, review explorer, insights
 .venv\Scripts\python.exe -m pytest
-# from frontend/ – 79 tests: API client, status UI, navigation, import wizard, analysis card, filters, charts, dashboard pages
+# from frontend/ – 94 tests: API client, status UI, navigation, import wizard, analysis card, filters, charts, dashboard pages, insights
 npm test
 ```
 

@@ -144,40 +144,76 @@ about how accurate VADER or the lexicon are (section 7).
 - Results, sample size and date of evaluation are written into this document. Until then, no accuracy is claimed.
 - Synthetic data is used **only** for software testing, never to report model accuracy.
 
-## 8. Insight generation (planned - Phase 6)
+## 8. Insight generation (Phase 6 - implemented)
 
-### Deterministic rules engine
-Rules run over the metrics layer and produce insight candidates, for example:
-| Type | Rule (initial, thresholds configurable) |
-|---|---|
-| Recurring complaint | Aspect negative mentions ≥ 10 and negative share ≥ 40 % in period |
-| Strength to preserve | Aspect mentions ≥ 10 and positive share ≥ 80 % |
-| Emerging negative trend | Significant rise in aspect negative share (§6) |
-| Property-specific issue | Property's aspect negative share significantly above the other properties' pooled share |
-| Cross-property issue | Recurring complaint present at ≥ 2 properties |
-| Opportunity | Aspect with high mention rate and mixed sentiment, or rating/sentiment mismatch cluster |
+Insights are **computed by rules from the stored analytics, never written freely**. Generation is a manual,
+repeatable action ("Generate insights"); it works with no AI service. Existing insights for the same data
+scope are replaced by a new generation (they are derived data, not source data).
 
-Each candidate carries: properties, aspect, period, supporting review IDs, counts and the exact metrics.
+### Definitions
+- **"Now"** is the date of the latest review in the chosen data scope (not today's date), so an old dataset
+  still gets a meaningful "recent" window. Period-based rules use only complete weeks / months as in section 6.
+- **Data scope** (`genuine` default, `synthetic`, `all`) is stored on every insight and shown on every card.
+  Insights made from synthetic demo data are labelled as such and are never presented as real findings.
+- **Descriptive rules** (counts and shares) need at least `MIN_ASPECT_MENTIONS` (default 10) reviews mentioning
+  the aspect at that property. **Inferential rules** (property vs the rest, trend change) need at least
+  `MIN_SAMPLE_COMPARISON` / `MIN_SAMPLE_TREND_WINDOW` (default 30) observations per side, because the intervals are
+  normal approximations.
+- Thresholds live in one place (`app/services/insights/rules.py`), are returned with every insight in
+  `metrics.thresholds`, and are not tuned to any dataset. They are starting points, not validated values.
+
+### Rules
+| Type | Rule | Supporting reviews |
+|---|---|---|
+| Recurring complaint (per property and aspect) | at least 10 mentions, at least 10 negative, negative share >= 40 % | the negative reviews |
+| Strength to preserve | at least 10 mentions, positive share >= 80 % | the positive reviews |
+| Emerging negative trend | the aspect's negative share rose between the previous and the latest window (section 6: interval excludes zero **and** >= 5 percentage points; each window >= 30 mentions) | negative reviews in the latest window |
+| Property-specific issue | the property's negative share for an aspect is above the pooled share of all other properties: interval of the difference excludes zero, difference >= 5 percentage points, >= 30 mentions on each side | the property's negative reviews |
+| Cross-property issue | the same aspect is a recurring complaint at two or more properties | the negative reviews at those properties |
+| Opportunity | at least 10 mentions, negative share between 30 % and 40 % (below the complaint line) and positive share >= 30 %: opinion is split | all reviews mentioning the aspect there |
+
+Not built: the "rating/sentiment mismatch cluster" opportunity idea from the first design (needs evaluation first).
+Because many rules are checked at once (properties x aspects), some will fire by chance; insights are presented as
+indications with their counts, not as proof (section 9). The generation result lists how many property/aspect
+combinations were checked and how many were skipped for too little data.
+
+### Evidence
+Each insight stores `supporting_review_count` (the full count) and up to 10 example reviews with the verbatim
+sentence (`insight_evidence`, enforced by foreign key). Examples are the strongest sentences, one per review,
+preferring distinct wording. `metrics.filters` holds the exact filter (properties, aspect, stance, dates, data
+scope) so the full supporting set is one click away in the Reviews explorer, and its total equals the stored count.
 
 ### Evidence strength
-- **strong:** ≥ 20 supporting reviews, spread over ≥ 2 months, low-sample flag false.
-- **moderate:** ≥ 8 supporting reviews.
-- **limited:** below that – shown only in the Insights list with a "limited evidence" label, never as a headline.
-(Initial thresholds, to be calibrated against real volumes and documented.)
+- **strong:** at least 20 supporting reviews, spread over at least 2 calendar months, and not low-sample.
+- **moderate:** at least 8 supporting reviews.
+- **limited:** fewer. With the default rule floors this is rare; it exists so lowering a floor cannot silently
+  produce headline claims. Limited insights are shown with a "limited evidence" label and never as a headline.
 
 ### Template wording (always available)
-Title, explanation and suggested action are rendered from templates using the computed numbers, e.g.
-"Breakfast complaints at {property}: {neg} of {mentions} breakfast mentions were negative ({pct}%) between {start} and {end}."
-Suggested actions come from a per-aspect action catalogue (e.g. breakfast → review buffet replenishment
-schedule and quality checks), clearly presented as suggestions.
+Title, explanation and suggested action come from templates filled with the computed numbers. Suggested actions
+come from a per-aspect catalogue (`insight_actions.json`, keyed by aspect key, with a generic fallback), and are
+labelled as suggestions, not facts.
 
-### Optional LLM narrative layer
-- Off by default (`LLM_PROVIDER=none`). Any paid provider is enabled only after a cost estimate is approved.
-- Input: the candidate's metrics JSON + up to N evidence excerpts with their review IDs. Nothing else.
-- Output: structured JSON (title, explanation, action, cited_review_ids).
-- **Grounding validator:** rejects output if cited IDs are not in the evidence set, if it contains numbers
-  not present in the metrics, or if it fails schema validation. On rejection, failure, timeout, rate-limit
-  or missing key → template text is kept and the reason is logged (without review text).
+### Grounding validator
+A provider-independent check, applied to **every** insight text (templates too), rejects a candidate if: it cites a
+review ID outside its evidence set; its text contains a number that is not derivable from `metrics`; or required
+fields are missing. A rejected candidate is not stored and is counted in the generation result.
+
+### Results on the demo data (2026-11-24)
+Run on the labelled synthetic demo data (465 reviews, scope `synthetic`) with the defaults above:
+15 insights, none rejected by the validator: 1 property-specific issue, 2 recurring complaints, 6 strengths and
+6 opportunities. No trend insight fired, because each of the two windows needs at least 30 mentions and the demo
+data is too thin per property and month; the generation result reports the skipped comparisons instead of hiding
+them. These are findings about generated data and say nothing about the hotels. The opportunity floor was first
+20 %, which produced 22 of 31 insights as near-universal "mixed opinion" noise; it was raised to 30 % before this
+result. That change was made by looking at the demo data, so the thresholds remain starting points, not validated
+values. The property-specific issue and the recurring complaint for the same property and aspect overlap by
+design: one says "repeated", the other "worse than the other properties".
+
+### Optional LLM wording - not built
+No LLM adapter exists. It would need a paid provider and an API key, so it is deferred until the project owner
+approves a provider and cost. The validator above is what such an adapter would have to pass; until then
+`generation_method` is always `template`.
 
 ## 9. Known limitations
 

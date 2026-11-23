@@ -7,6 +7,17 @@ import { renderWithProviders } from "@/test/utils";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/overview" }));
 
+// Every real page is built now, so a not-yet-built entry is added to prove the disabled rendering
+// still works for any page that is listed before it exists.
+vi.mock("@/lib/navigation", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/navigation")>();
+  const planned = { href: "/planned", label: "Planned page", icon: actual.NAV_SECTIONS[0].items[0].icon, phase: 9, available: false };
+  return {
+    ...actual,
+    NAV_SECTIONS: [{ ...actual.NAV_SECTIONS[0], items: [...actual.NAV_SECTIONS[0].items, planned] }, ...actual.NAV_SECTIONS.slice(1)],
+  };
+});
+
 describe("NavLinks", () => {
   it("renders available pages as links and marks the current page", () => {
     renderWithProviders(<NavLinks />);

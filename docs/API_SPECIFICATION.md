@@ -1,7 +1,7 @@
 # API Specification
 
-Status: Phases 2–4 implemented (health, properties, imports, demo data, analysis runs, analytics). Reviews and
-insights are still the agreed design. The live, authoritative contract is the generated OpenAPI documentation at `/docs`
+Status: Phases 2–6 implemented (health, properties, imports, demo data, analysis runs, analytics, reviews,
+insights). The live, authoritative contract is the generated OpenAPI documentation at `/docs`
 (Swagger UI) and `/openapi.json`; this file explains intent and behaviour.
 
 ## Conventions
@@ -140,12 +140,33 @@ dates and `n`, both values, the difference and its 95% interval, and the practic
 
 There is no separate `/sentiment` endpoint: sentiment distribution is part of `overview` and `comparison`.
 
-## Insights (design only)
+## Insights (Phase 6)
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/insights` | Filters: `property_ids`, `insight_type`, `evidence_strength`; paginated |
-| GET | `/api/insights/{id}` | Insight + linked properties + evidence reviews + metrics used |
-| POST | `/api/insights/generate` | Regenerate insights from current analytics. Body `{ use_llm: bool }` (ignored if LLM disabled) |
+| GET | `/api/insights` | Paginated list, strongest first. Filters: `property_ids` (comma list; an insight is returned when it involves any of them), `insight_type`, `evidence_strength`, `aspect`, `data_scope` (`genuine` default, `synthetic`, `all`), `page`, `page_size` (default 20, max 100). |
+| GET | `/api/insights/{id}` | One insight with its properties, example evidence and the metrics it was written from. Unknown id: 404 `INSIGHT_NOT_FOUND`. |
+| POST | `/api/insights/generate` | Regenerate the insights of one data scope. Body `{ "data_scope": "genuine" \| "synthetic" \| "all" }`. Returns a `GenerationResult`. |
+
+**Ordering:** evidence strength (strong first), then type (trend, cross-property, property issue, recurring
+complaint, opportunity, strength), then supporting reviews, then id.
+
+**List `meta`:** `page`, `page_size`, `total`, `data_scope`, `generated_at` (null when never generated), `stale`
+(true when reviews or their analysis changed after the stored insights were made), `analysis_run_id`, and the usual
+`dataset` block.
+
+**Insight fields:** `id`, `insight_type`, `scope`, `data_scope`, `aspect {key, display_name}`, `title`,
+`explanation`, `recommended_action`, `supporting_review_count`, `period_start`, `period_end`, `evidence_strength`,
+`generation_method` (always `template`), `generated_at`, `properties`, `evidence` and `metrics`. Each `evidence`
+item is `{review_id, excerpt, rank, property_id, property_name, review_date, rating, is_synthetic}`: the verbatim
+sentence from a real review. `metrics.filters` is the exact filter (`property_ids`, `aspect`, `aspect_sentiment`,
+`date_from`, `date_to`, `data_scope`) that reproduces the supporting reviews in the Reviews explorer; the explorer's
+total equals `supporting_review_count`. `metrics.thresholds` holds every threshold the rule used.
+
+**`GenerationResult`:** `data_scope`, `as_of` (date of the latest review in scope), `created`, `replaced`,
+`rejected_by_validator`, `by_type`, `checked_property_aspects`, `below_mention_floor`,
+`comparisons_skipped_too_few`, `notes`. A generation replaces the old insights of that scope in one transaction; if it
+fails, the old insights are kept. There is no `use_llm` option: no LLM adapter exists (`docs/AI_ANALYTICS.md`
+section 8).
 
 ## Limits
 - Upload: `.csv`, `.xlsx` only (extension **and** content sniffing), max `MAX_UPLOAD_MB` (default 20 MB), max `MAX_IMPORT_ROWS`.

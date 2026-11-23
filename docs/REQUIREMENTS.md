@@ -59,6 +59,8 @@ Status: Draft for approval (Phase 1). IDs are referenced by tests and the roadma
 - **FR-N3** Insights are generated from deterministic analytics; an optional LLM may only rephrase/summarise provided evidence.
 - **FR-N4** If the LLM is disabled or fails, template-based insights are still produced and the dashboard is fully functional.
 
+_Status (Phase 6):_ FR-N1, FR-N2 and FR-N4 are implemented and tested. FR-N3's optional LLM is not built (it needs the project owner's approval of a provider and cost); every insight is template-written and passes the grounding validator.
+
 ## 3. Non-functional requirements
 
 - **NFR-1 Correctness** – Analytics match hand-calculated results on the validation fixture.

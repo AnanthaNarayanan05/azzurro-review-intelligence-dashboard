@@ -1,6 +1,7 @@
 "use client";
 
 import { AspectsSection } from "@/components/dashboard/aspects-section";
+import { LatestInsights } from "@/components/insights/latest-insights";
 import { KpiTile } from "@/components/dashboard/kpi-tile";
 import { NoData } from "@/components/dashboard/no-data";
 import { PropertyTable } from "@/components/dashboard/property-table";
@@ -103,6 +104,7 @@ export function OverviewView() {
                     </CardContent>
                   </Card>
 
+                  <LatestInsights filters={filters} />
                   <AspectsSection filters={filters} top={data.aspects} />
                   <TrendsPanel filters={filters} />
                 </>

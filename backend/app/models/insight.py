@@ -7,6 +7,7 @@ from app.models.base import (
     Base,
     EvidenceStrength,
     GenerationMethod,
+    InsightDataScope,
     InsightScope,
     InsightType,
     check_in,
@@ -21,6 +22,7 @@ class Insight(Base):
     __table_args__ = (
         check_in("insight_type", InsightType),
         check_in("scope", InsightScope),
+        check_in("data_scope", InsightDataScope),
         check_in("evidence_strength", EvidenceStrength),
         check_in("generation_method", GenerationMethod),
     )
@@ -31,6 +33,10 @@ class Insight(Base):
     )
     insight_type: Mapped[str] = mapped_column(String(32))
     scope: Mapped[str] = mapped_column(String(16))
+    # genuine / synthetic / all: the reviews the insight was computed from, shown on every card.
+    data_scope: Mapped[str] = mapped_column(
+        String(16), default=InsightDataScope.GENUINE.value, server_default="genuine", index=True
+    )
     aspect_id: Mapped[int | None] = mapped_column(ForeignKey("aspects.id", ondelete="SET NULL"))
     title: Mapped[str] = mapped_column(String(200))
     explanation: Mapped[str] = mapped_column(Text)

@@ -45,3 +45,9 @@ export function formatSigned(value: number, digits = 1): string {
   const text = Math.abs(value).toFixed(digits);
   return value > 0 ? `+${text}` : value < 0 ? `−${text}` : text;
 }
+
+/** The API sends UTC timestamps without a zone suffix; without one the browser would read them as local time. */
+export function formatDateTime(timestamp: string): string {
+  const utc = /(Z|[+-]\d\d:?\d\d)$/.test(timestamp) ? timestamp : `${timestamp}Z`;
+  return new Date(utc).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
+}

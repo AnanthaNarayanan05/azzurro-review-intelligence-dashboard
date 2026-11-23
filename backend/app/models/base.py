@@ -101,6 +101,14 @@ class InsightType(StrEnum):
     OPPORTUNITY = "opportunity"
 
 
+class InsightDataScope(StrEnum):
+    """Which reviews an insight was computed from. Synthetic data is never passed off as genuine."""
+
+    GENUINE = "genuine"
+    SYNTHETIC = "synthetic"
+    ALL = "all"
+
+
 class InsightScope(StrEnum):
     PORTFOLIO = "portfolio"
     PROPERTY = "property"

@@ -28,10 +28,12 @@ const SCOPE_LABELS: Record<DataScope, string> = {
 interface FilterBarProps {
   /** Hide the property chips on pages that are already about one property. */
   showProperties?: boolean;
+  /** Hide the date range on pages whose items carry their own period (Insights). */
+  showDates?: boolean;
 }
 
 /** The global filters. State lives in the URL, so every view can be bookmarked and shared. */
-export function FilterBar({ showProperties = true }: FilterBarProps) {
+export function FilterBar({ showProperties = true, showDates = true }: FilterBarProps) {
   const hydrated = useHydrated();
   const { filters, problem, update, reset } = useFilters();
   const properties = useProperties();
@@ -87,6 +89,8 @@ export function FilterBar({ showProperties = true }: FilterBarProps) {
         )}
 
         <div className="flex flex-wrap items-end gap-3">
+          {showDates && (
+            <>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="filter-from" className="text-xs text-muted-foreground">
               From
@@ -115,6 +119,8 @@ export function FilterBar({ showProperties = true }: FilterBarProps) {
               className="w-40"
             />
           </div>
+            </>
+          )}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="filter-scope" className="text-xs text-muted-foreground">
               Data
