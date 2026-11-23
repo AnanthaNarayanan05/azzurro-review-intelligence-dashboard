@@ -1,8 +1,9 @@
 # Deployment
 
 Status: **Local setup verified (also from a fresh clone of the repository). PostgreSQL compatibility verified locally.
-Hosted deployment is NOT done: the project owner chose a local-only handover on 2026-11-24.** The "Hosted deployment"
-section below is a ready runbook for the day hosting is wanted; none of it has been executed.
+Hosted deployment is NOT done yet.** The owner first chose local-only, then asked for a live demo URL (2026-11-24) and
+chose free hosts with a fully interactive synthetic-data demo. Deployment files are ready (`render.yaml`,
+`docs/GO_LIVE.md`); none of the hosted steps has been executed.
 
 ## Environment requirements
 
@@ -117,8 +118,8 @@ queries per page), and memory use under analysis load on the hosting plan.
 
 ## Hosted deployment (Phase 8: prepared and checked locally, **not executed**)
 
-Nothing has been deployed: the project owner chose a local-only handover (2026-11-24). If hosting is wanted later, it needs
-the decisions listed at the end of this section, and nothing in this section claims a live system exists.
+Nothing has been deployed yet, and nothing in this section claims a live system exists. Click-by-click steps for the
+chosen setup are in `docs/GO_LIVE.md`; `render.yaml` holds the API's settings.
 
 ### Shape of the deployment
 
@@ -130,7 +131,10 @@ Three pieces, each independent:
 | API | FastAPI app in `backend/` | `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
 | Web | Next.js app in `frontend/` | build `npm ci && npm run build`, start `npm run start` (or the host's native Next.js support) |
 
-**Release step for the API (every deploy):** `python -m alembic upgrade head` before starting the new code.
+**Release step for the API (every deploy):** `python -m alembic upgrade head` before starting the new code. Render's free
+plan has no pre-deploy command, so `render.yaml` runs it at the start of the start command (`alembic upgrade head && uvicorn ...`;
+checked locally with the production settings). Pin `PYTHON_VERSION=3.11.9`: Render's default is newer and untested here. Use
+Neon's **direct** (non-pooled) connection string, which Neon recommends for migrations.
 Build step: `pip install -r requirements.txt` (runtime dependencies only, includes the PostgreSQL driver).
 
 ### Configuration for production
@@ -182,11 +186,11 @@ why this step waits for the owner. The API uses about 65 MB resident on the deve
 5. Insights -> Generate insights; open an insight's evidence.
 6. Record the date, the URLs and any problem in `PROJECT_PROGRESS.md`. Do not claim the deployment works until this is done.
 
-### Decisions needed from the project owner
+### Decisions made by the project owner (2026-11-24)
 
-1. Which hosts (or none: local-only handover), and whether a free account / card on file is acceptable.
-2. Public or private access, and whether a login or read-only mode is required.
-3. Whether any genuine data may ever be hosted (default: no).
+1. Hosts: Vercel (web) + Render (API) + Neon (PostgreSQL), all free plans. The owner creates the accounts.
+2. Access: **public and fully interactive**, no login; mitigated by upload caps (5 MB, 5,000 rows) and synthetic data only.
+3. Genuine data is never hosted. The Neon free plan is 1 GB, so uploads are capped.
 
 ## Troubleshooting
 

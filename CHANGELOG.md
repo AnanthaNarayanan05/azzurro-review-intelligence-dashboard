@@ -4,7 +4,11 @@ All notable changes, newest first. Dates are when the work was completed.
 
 ## Phase 8 - Deployment and handover (2026-11-24)
 
-**Not deployed, by decision:** the project owner chose a local-only handover. The hosting runbook is kept ready.
+**Not deployed yet:** the owner asked for a live demo URL; deploy files are ready and wait for the owner's free accounts.
+
+### Added (live-demo preparation)
+- `render.yaml` (Render Blueprint for the API: free plan, Python 3.11.9, migrations then uvicorn, demo upload caps) and
+  `docs/GO_LIVE.md` (Neon, Render, Vercel step by step, and how to reset or switch off the demo).
 
 ### Added
 - **PostgreSQL support verified:** `psycopg[binary]` added to `requirements.txt`; `postgres://` / `postgresql://` URLs are

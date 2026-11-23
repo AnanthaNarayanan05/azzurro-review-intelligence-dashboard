@@ -480,3 +480,22 @@ code has changed since.
 
 **Next steps (only when the owner supplies something):** real data -> import, review insights by hand, label and evaluate,
 write results into `docs/AI_ANALYTICS.md` section 7; hosting -> follow `docs/DEPLOYMENT.md`.
+
+## 2026-11-24 – Live demo requested: deployment prepared, waiting for the owner's accounts
+
+**Decision (owner):** after choosing local-only, the owner asked for a live demo URL and chose **free hosts** (Vercel web, Render
+API, Neon PostgreSQL) and a **fully interactive** public demo (synthetic data only, no login).
+
+**Done:** `render.yaml` (free web service, `rootDir: backend`, `PYTHON_VERSION=3.11.9`, `APP_ENV=production`, uploads capped at
+5 MB / 5,000 rows, `DATABASE_URL` and `CORS_ORIGINS` entered in Render's dashboard, health check `/api/health`); start command
+`alembic upgrade head && uvicorn ...` because Render's free plan has no pre-deploy command. Checked locally with the same
+command and production settings (health ok, environment `production`, CORS allows only the listed origin). Facts taken from
+Render's and Neon's and Vercel's documentation pages on 2026-11-24 (Render free: 15-minute sleep, 750 hours, ephemeral disk;
+Neon: use the direct connection for migrations; Vercel: set Root Directory to `frontend`). `docs/GO_LIVE.md` has the ordered steps.
+The repository owner is the commit author, which Vercel's Hobby plan requires.
+
+**Not done:** accounts (owner's to create; I never enter passwords, codes or card details), the deployment itself, the live smoke
+test. **The app is not live and no URL exists yet.**
+
+**Next steps:** the owner follows `docs/GO_LIVE.md` and sends me the Vercel and Render addresses; I run the smoke test in
+`docs/DEPLOYMENT.md`, record the URL, date and results here and in the README, and commit.
