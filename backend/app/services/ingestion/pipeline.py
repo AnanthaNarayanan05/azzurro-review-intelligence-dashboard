@@ -560,6 +560,8 @@ def _apply_update(review: Review, row: CleanRow, property_id: int, fingerprint: 
     review.source_url = row.source_url or review.source_url
     review.content_hash = fingerprint
     review.updated_at = utcnow()
+    review.analysis_status = None  # content changed: the next analysis run must re-score it
+    review.analysed_run_id = None
     return changed or ["details"]
 
 

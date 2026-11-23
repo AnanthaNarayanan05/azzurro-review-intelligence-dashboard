@@ -36,6 +36,8 @@ export function UndoImportButton({ report, onUndone }: UndoImportButtonProps) {
       void queryClient.invalidateQueries({ queryKey: ["imports"] });
       void queryClient.invalidateQueries({ queryKey: ["properties"] });
       void queryClient.invalidateQueries({ queryKey: ["demo"] });
+      void queryClient.invalidateQueries({ queryKey: ["analysis"] });
+      void queryClient.invalidateQueries({ queryKey: ["analytics"] });
       setOpen(false);
       onUndone?.();
     },

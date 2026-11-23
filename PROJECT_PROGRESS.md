@@ -137,3 +137,82 @@ human-labelled sample can be supplied for evaluation.
 4. Rule-based aspect lexicon (config-driven) with evidence text and per-mention sentiment.
 5. Analysis runs (recorded, re-runnable) and metrics endpoints with sample-size guards; hand-calculated fixture test.
 6. Update docs, tests, changelog and this file; commit and push.
+
+## 2026-11-24 – Phase 4: Analytics engine
+
+**Current state:** Phases 1–4 complete. Branch `main`. Latest commit before this phase: `d2de3f4` (Phase 3); the
+Phase 4 commit is the one that contains this entry (see `git log`). Next: Phase 5 (dashboard).
+
+**Completed**
+- NLP (`backend/app/analytics/nlp/`): placeholder handling, rule-based sentence splitting, language normalisation and
+  detection (`langdetect`, fixed seed), VADER behind a `SentimentEngine` interface, JSON aspect lexicon v1.0.0
+  (8 aspects, exclusion phrases, `*` suffix wildcard), per-review analysis returning segment/overall sentiment and
+  aspect mentions with verbatim evidence.
+- Analysis runs (`app/services/analysis.py`): results stored per run with engine and lexicon version; single
+  transaction; failure rolls back and records a `failed` run (500 `ANALYSIS_FAILED`); automatic after import and
+  demo load (failures there never fail the import); engine/lexicon change forces a full re-run.
+- Metrics (`app/analytics/metrics.py`, `stats.py`) and API: overview, comparison, property detail, aspects,
+  aspect examples, trends. Sample sizes on every number; `low_sample`; best/worst only if 95% intervals separate;
+  trends use complete periods only (`as_of`), Monday-based weeks, equal-length windows, practical-size thresholds.
+  `data_scope` defaults to `genuine` so synthetic data never mixes in silently.
+- Frontend: Settings → **Text analysis** card (counts, method, honesty notes, working "Analyse waiting reviews" and
+  "Re-analyse all reviews"); import/undo/demo flows refresh analysis and analytics queries.
+- Docs updated: AI_ANALYTICS (rewritten to the implemented method), API_SPECIFICATION, DATABASE_SCHEMA,
+  SYSTEM_ARCHITECTURE, TESTING_PLAN, DEVELOPMENT_ROADMAP, RISK_REGISTER (R22–R25), README (was stale at Phase 2), CHANGELOG.
+
+**Files (main)**
+- Backend: `app/analytics/{stats,metrics}.py`, `app/analytics/nlp/{preprocess,sentiment,aspects,review_analysis}.py`,
+  `app/analytics/nlp/aspect_lexicon.json`, `app/services/analysis.py`, `app/schemas/analysis.py`,
+  `app/api/routes/{analysis,analytics}.py`, migration `20261124_9968fa3529ac_analysis_fields.py`, tests
+  `test_nlp_units.py`, `test_analysis_api.py`, `test_analytics_api.py`, fixtures `tests/fixtures/`.
+- Frontend: `components/settings/analysis-card(.test).tsx`, `services/analysis.ts`, `types/api.ts`.
+
+**Database changes:** migration `analysis_fields` adds `reviews.analysis_status` (CHECK, indexed) and
+`reviews.analysed_run_id` (FK, SET NULL). `alembic check` clean; upgrade → downgrade → upgrade verified on the dev DB.
+
+**API changes:** `GET /api/analysis/status`, `POST /api/analysis/run`, `GET /api/analysis/runs`;
+`GET /api/analytics/{overview,comparison,properties/{id},aspects,aspects/{key}/examples,trends}`.
+New dependencies in `backend/requirements.txt`: `vaderSentiment==3.3.2`, `langdetect==1.0.9`.
+
+**Tests run (2026-11-24):** backend `pytest` **239 passed** (88 new; exit code 0); `ruff check` and
+`ruff format --check` clean; frontend `vitest` **32 passed** (4 new); `tsc --noEmit` and `eslint` clean. Manual
+browser run: demo load analysed 465 reviews (450 analysed, 15 non-English), manual re-run worked, live API calls
+~0.2 s. `next build` was not re-run for this phase (no route or config changes beyond one added component).
+
+**Issues found and fixed:** `f-string` backslash error in the lexicon regex builder; Alembic autogenerate misses
+CHECK constraints (added by hand); test data with identical text was collapsed as duplicates by the importer (tests
+now use distinct text); the API's naive UTC timestamps displayed in the wrong zone (card now parses them as UTC);
+a nested `data.data` key in analytics responses (renamed `dataset`).
+
+**Known limitations / bugs**
+- **Sentiment and aspect accuracy are not evaluated.** VADER thresholds and the "neutral sentence takes the box's
+  polarity" rule are judgement calls until Phase 7 (risks R22, R23).
+- Keyword aspects miss implicit mentions; "view"/"connection" are ambiguous.
+- Proportion intervals use the normal (Wald) approximation, not Wilson.
+- Metrics are computed per request from stored rows (fine at hundreds–low thousands of reviews; not load-tested at
+  100k).
+- The dev database currently holds the 465 synthetic demo reviews (removable from Settings → Demo data).
+- Windows paths: the project folder name contains an en dash; quote paths in shells.
+
+**Decisions**
+- Stored analysis (not per-request scoring); one transaction per run.
+- A review counts once per aspect; label = sign of positive minus negative mentions.
+- Non-English reviews are counted, not scored. "Everything" is not a placeholder.
+- Weeks are Monday–Sunday on calendar dates, no time-zone conversion; only complete periods are compared.
+- Best/worst property named only when 95% rating intervals do not overlap.
+
+**Open questions for the project owner (unchanged):** the real dataset (format, timing, which export), whether
+hosting and login are required, LLM provider vs template-only insights, assessment deadline, and whether a
+human-labelled sample can be supplied for evaluation (needed for Phase 7).
+
+**Next steps (Phase 5 – dashboard)**
+1. Inspect `frontend/` navigation (`lib/navigation.ts`), the Overview page and the API client; add typed analytics
+   services and TanStack Query hooks for the Phase 4 endpoints.
+2. Global filter bar synced to the URL (property multi-select from `/api/properties`, date range, data scope with a
+   clear "synthetic demo data" banner whenever scope ≠ genuine).
+3. Overview page: KPI tiles (n, missing, low-sample), rating distribution, sentiment split with the not-analysed
+   counts, per-property table, top praised/criticised aspects with example sentences.
+4. Properties list and detail pages; Comparison page honouring `rating_ranking.status` (no winner unless `ranked`);
+   trends charts (Recharts) with `insufficient_data` and incomplete-period states.
+5. Review explorer needs a `GET /api/reviews` endpoint (not built yet; see API_SPECIFICATION "Reviews").
+6. Component tests, browser verification of every control, docs + progress + commit + push.

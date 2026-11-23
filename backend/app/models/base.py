@@ -47,6 +47,14 @@ class TextSegment(StrEnum):
     BODY = "body"
 
 
+class AnalysisStatus(StrEnum):
+    """What the NLP pipeline did with a review. NULL on the review means "not processed yet"."""
+
+    ANALYSED = "analysed"
+    NO_TEXT = "no_text"  # nothing substantive to score (empty or a placeholder such as "Nothing")
+    NON_ENGLISH = "non_english"  # the English-only sentiment engine was not applied
+
+
 class SourceField(StrEnum):
     POSITIVE = "positive"
     NEGATIVE = "negative"

@@ -1,0 +1,22 @@
+Review ID,Hotel,Review Date,Score,Positive review,Negative review
+A1,Alpha Hotel,2026-03-02,9,Great location close to the train station. Staff were friendly.,Nothing
+A2,Alpha Hotel,2026-03-05,9,The room was clean.,
+A3,Alpha Hotel,2026-03-09,8,Staff were friendly.,
+A4,Alpha Hotel,2026-03-12,8,Great location close to the train station.,Noisy at night.
+A5,Alpha Hotel,2026-03-17,7,The room was clean.,The bathroom was dirty.
+A6,Alpha Hotel,2026-03-20,7,,Staff were rude and unhelpful.
+A7,Alpha Hotel,2026-03-24,6,,The wifi was slow and kept dropping.
+A8,Alpha Hotel,2026-03-27,6,,Staff were rude and unhelpful.
+A9,Alpha Hotel,2026-02-10,10,Staff were friendly.,
+A10,Alpha Hotel,2026-03-31,1,,Staff were rude and unhelpful.
+B1,Beta Hotel,2026-02-20,5,,Staff were rude and unhelpful.
+B2,Beta Hotel,2026-02-25,6,,The bathroom was dirty.
+B3,Beta Hotel,2026-03-03,5,,Noisy at night.
+B4,Beta Hotel,2026-03-08,6,,Staff were rude and unhelpful.
+B5,Beta Hotel,2026-03-15,5,,Staff were rude and unhelpful.
+B6,Beta Hotel,2026-03-22,6,The room was clean.,
+G1,Gamma Hotel,2026-03-10,10,Great value for money.,
+G2,Gamma Hotel,2026-03-14,10,Great value for money!,
+G3,Gamma Hotel,2026-03-16,9,Staff were friendly.,Nothing
+G4,Gamma Hotel,2026-03-18,9,La chambre était très propre et le personnel très aimable.,
+G5,Gamma Hotel,2026-03-19,10,Nothing,N/A

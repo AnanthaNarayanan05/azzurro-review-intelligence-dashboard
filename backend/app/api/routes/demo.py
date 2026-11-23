@@ -7,7 +7,7 @@ from app.core.config import Settings, get_settings
 from app.core.database import get_db
 from app.schemas.common import DataResponse
 from app.schemas.imports import ImportReport, RemovedRead
-from app.services import demo
+from app.services import analysis, demo
 
 router = APIRouter(prefix="/demo", tags=["demo data"])
 
@@ -32,6 +32,7 @@ def load_demo_data(
     db: Session = Depends(get_db), settings: Settings = Depends(get_settings)
 ) -> DataResponse[ImportReport]:
     batch = demo.load_demo(db, settings)
+    analysis.analyse_after_import(db)
     return DataResponse(data=build_report(db, batch))
 
 

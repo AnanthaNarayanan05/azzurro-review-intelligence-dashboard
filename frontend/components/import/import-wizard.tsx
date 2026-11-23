@@ -129,6 +129,8 @@ export function ImportWizard() {
       void queryClient.invalidateQueries({ queryKey: ["imports"] });
       void queryClient.invalidateQueries({ queryKey: propertiesQueryKey });
       void queryClient.invalidateQueries({ queryKey: ["demo"] });
+      void queryClient.invalidateQueries({ queryKey: ["analysis"] });
+      void queryClient.invalidateQueries({ queryKey: ["analytics"] });
     },
     onError: () => setConfirmOpen(false), // the message is shown in the form
   });

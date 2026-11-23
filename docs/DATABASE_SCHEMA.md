@@ -96,6 +96,8 @@ Warnings (e.g. missing language, rating missing but text present) do not block i
 | source_url | TEXT | NULL. Optional link to the review at its source, only if the file supplies one (Phase 3) |
 | imported_at | TIMESTAMP | NOT NULL |
 | updated_at | TIMESTAMP | NULL. Set when a re-import changes an existing review in place (Phase 3) |
+| analysis_status | VARCHAR(16) | NULL, CHECK IN (`analysed`,`no_text`,`non_english`), indexed (Phase 4). NULL = waiting to be analysed. A re-import that changes the review's content resets it to NULL so it is re-scored |
+| analysed_run_id | INTEGER | NULL, FK → analysis_runs.id ON DELETE SET NULL (Phase 4). The run that produced the review's current results |
 
 Constraints / indexes:
 - CHECK: at least one of `positive_text`, `negative_text`, `body_text`, `rating` is non-null.
@@ -138,8 +140,9 @@ Reviews with no usable text get no `overall` row and are reported as "no text" r
 | display_name | VARCHAR(100) | NOT NULL |
 | is_active | BOOLEAN | default true |
 
-Keyword definitions live in a versioned config file (`backend/app/analytics/nlp/aspect_lexicon.yaml`)
-that is synced to this table at startup, so aspects can be extended without code changes.
+Keyword definitions live in a versioned JSON file (`backend/app/analytics/nlp/aspect_lexicon.json`, Phase 4).
+Each analysis run syncs it to this table: new aspects are added, and an aspect removed from the file is set to
+`is_active = false` (its history is kept, it is no longer reported). Aspects can be extended without code changes.
 
 ### aspect_mentions
 | Column | Type | Constraints |

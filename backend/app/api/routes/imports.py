@@ -22,6 +22,7 @@ from app.schemas.imports import (
     PropertyValuesRead,
     RemovedRead,
 )
+from app.services import analysis
 from app.services.ingestion import pipeline
 from app.services.ingestion.mapping import IMPORT_FIELDS, TEXT_FIELD_KEYS
 
@@ -172,6 +173,8 @@ def commit_import(
         remember_aliases=body.remember_aliases,
     )
     batch = pipeline.commit_import(db, settings, import_id, request)
+    if batch.status == ImportStatus.COMPLETED.value:
+        analysis.analyse_after_import(db)
     return DataResponse(data=build_report(db, batch))
 
 

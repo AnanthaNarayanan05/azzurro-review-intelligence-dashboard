@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     default_rating_scale_max: float = Field(default=10, gt=0)
     min_sample_comparison: int = Field(default=30, ge=1)
     min_sample_trend_window: int = Field(default=30, ge=1)
+    # An aspect needs at least this many reviews mentioning it before its sentiment split is
+    # trusted.
+    min_aspect_mentions: int = Field(default=10, ge=1)
 
     sentiment_engine: Literal["vader", "transformer"] = "vader"
     transformer_model_name: str = ""

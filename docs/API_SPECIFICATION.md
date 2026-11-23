@@ -1,7 +1,7 @@
 # API Specification
 
-Status: Phases 2–3 implemented (health, properties, imports, demo data). Analytics, reviews, analysis and insights
-are still the agreed design. The live, authoritative contract is the generated OpenAPI documentation at `/docs`
+Status: Phases 2–4 implemented (health, properties, imports, demo data, analysis runs, analytics). Reviews and
+insights are still the agreed design. The live, authoritative contract is the generated OpenAPI documentation at `/docs`
 (Swagger UI) and `/openapi.json`; this file explains intent and behaviour.
 
 ## Conventions
@@ -16,7 +16,8 @@ are still the agreed design. The live, authoritative contract is the generated O
 - **Common analytics filters:** `property_ids` (comma-separated), `date_from`, `date_to` (ISO dates).
 - Dates ISO-8601; ratings on a 0–10 scale.
 
-**Implemented so far:** `GET /api/health` (Phase 2); properties, imports and demo-data endpoints (Phase 3). Sections
+**Implemented so far:** `GET /api/health` (Phase 2); properties, imports and demo-data endpoints (Phase 3); analysis
+and analytics endpoints (Phase 4). Sections
 marked *Design only* are not implemented yet.
 
 ## System
@@ -93,21 +94,42 @@ coming from Booking.com.
 | GET | `/api/reviews` | Query params: `q`, `property_ids`, `date_from`, `date_to`, `rating_min`, `rating_max`, `sentiment`, `aspect`, `aspect_sentiment`, `language`, `sort` (`newest`/`oldest`/`rating_desc`/`rating_asc`), `page`, `page_size` (≤ 100) |
 | GET | `/api/reviews/{id}` | Original text + sentiment per segment + aspect mentions with evidence |
 
-## Analytics (design only)
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/analytics/overview` | KPIs, sentiment distribution, rating distribution, per-property volume & rating, top positive/negative aspects |
-| GET | `/api/analytics/comparison` | Per-property metric matrix incl. aspect performance, with low-sample flags and best/worst only where justified |
-| GET | `/api/analytics/properties/{id}` | Overview scoped to a property + top praise/complaints |
-| GET | `/api/analytics/sentiment` | Sentiment distribution, optionally `group_by=property|month` |
-| GET | `/api/analytics/aspects` | Per-aspect mention counts and sentiment split; `aspect` for example evidence |
-| GET | `/api/analytics/trends` | `metric` (`volume`/`avg_rating`/`sentiment`/`aspect_negative_share`), `granularity` (`month`/`quarter`), `aspect?`; returns series + detected changes (or `insufficient_data`) |
+## Analysis (implemented, Phase 4)
 
-## Analysis (design only)
+Sentiment and aspect results are computed by a *run* and stored; analytics read the stored results. A run is
+triggered automatically after every import commit and demo load (only if reviews are waiting), or manually.
+
 | Method | Path | Description |
 |---|---|---|
-| POST | `/api/analysis/run` | Re-run NLP over all (or filtered) reviews; returns `analysis_run_id` |
-| GET | `/api/analysis/runs` | History of analysis runs |
+| GET | `/api/analysis/status` | `{ engine, lexicon_version, total_reviews, analysed, no_text, non_english, pending, latest_run, notes }`. `notes` states the method's limits (VADER, English only, not evaluated) |
+| POST | `/api/analysis/run` | Optional body `{ scope: "pending" \| "all" }` (default `pending`). Returns `{ run, processed, analysed, no_text, non_english, aspect_mentions }`. A different engine or lexicon version than the last run forces `all`. Runs in one transaction: on failure nothing changes, a `failed` run is recorded and the response is 500 `ANALYSIS_FAILED` |
+| GET | `/api/analysis/runs` | Paginated run history, newest first (`triggered_by`, engine, lexicon version, status, counts) |
+
+A failure *after an import* never fails the import: the reviews stay saved and are shown as "waiting".
+
+## Analytics (implemented, Phase 4)
+
+All endpoints are read-only and return `{ "data": ... }`. Shared filters: `property_ids` (comma-separated),
+`date_from`, `date_to`, and `data_scope` = `genuine` (default) \| `synthetic` \| `all`. Invalid filters return
+422 `INVALID_FILTER`. Every response carries a `dataset` block
+(`scope`, `genuine_reviews`, `synthetic_reviews`, `mixed`, first/last review date) so the UI can label what it shows.
+A measure is `{ value, n, missing, low_sample }`; with no data `value` is `null`, never 0.
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/analytics/overview` | `reviews` (n, with_text_analysis); `rating` (measure + 10-bin `distribution`, last bin holds 9 and 10); `sentiment` (counts, shares over analysed reviews, `not_analysed: {no_text, non_english, pending}`); per-`properties` rating; `aspects.most_praised` / `most_criticised` (only aspects with at least `MIN_ASPECT_MENTIONS` reviews) |
+| GET | `/api/analytics/comparison` | One row per property: rating with `ci_low`/`ci_high`, sentiment block, aspect rows. `rating_ranking`: `status` = `ranked` \| `difference_not_significant` \| `insufficient_data`; `best`/`worst` only when `ranked` |
+| GET | `/api/analytics/properties/{id}` | Overview scoped to one property plus `top_praise` / `top_complaints`, each with verbatim `examples`. 404 `PROPERTY_NOT_FOUND` |
+| GET | `/api/analytics/aspects` | Per aspect: `mentions` (reviews), positive/neutral/negative counts and shares, `mention_rate`, `low_sample`; plus `definition` text |
+| GET | `/api/analytics/aspects/{key}/examples` | `sentiment` (default `negative`), `limit` (1-20): real sentences with `review_id`, `property_id`, `review_date`, `is_synthetic`, `evidence_text`, `matched_term`, `source_field`. 404 `ASPECT_NOT_FOUND` |
+| GET | `/api/analytics/trends` | `metric` = `volume` \| `avg_rating` \| `sentiment_positive_share` \| `sentiment_negative_share` \| `aspect_negative_share` (needs `aspect`, else 422); `granularity` = `week` \| `month`; `window` (periods, default 4 weeks / 3 months); `as_of` (default today). Returns `series` (every period, empty ones with `n: 0`, `value: null`, plus `complete` and `low_sample`) and `change` |
+
+`change.status` is `increase` \| `decrease` \| `no_significant_change` \| `insufficient_data` (a window has fewer
+than `MIN_SAMPLE_TREND_WINDOW` observations) \| `descriptive` (volume only). It includes both windows with their
+dates and `n`, both values, the difference and its 95% interval, and the practical threshold used. Method:
+`docs/AI_ANALYTICS.md` section 6.
+
+There is no separate `/sentiment` endpoint: sentiment distribution is part of `overview` and `comparison`.
 
 ## Insights (design only)
 | Method | Path | Description |

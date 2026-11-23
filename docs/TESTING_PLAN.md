@@ -18,6 +18,12 @@ Status: In progress. Results of each run are recorded in `PROJECT_PROGRESS.md`.
 - Manual browser run (2026-11-24, built-in browser): upload a CSV with a duplicate, an unreadable date and a future date, create properties from file values, import, read the report (6 rows = 3 imported + 1 duplicate + 2 rejected), undo (reviews removed, properties kept), load demo data (465 reviews across four properties, counted as synthetic), remove it, view history. No application console errors on fresh loads.
 - Not yet covered: automated browser (Playwright) test of the wizard, XLSX upload through the UI, accessibility audit.
 
+**Implemented (Phase 4):**
+- Backend (pytest, **239 tests in total**, run 2026-11-24, exit code 0): `test_nlp_units.py` (46: placeholders incl. "Everything", sentence splitting, VADER labels and thresholds, wildcard / whole-word / exclusion matching, one sentence with several aspects, language normalisation and detection, non-English / no-text / detected-language statuses, the neutral-sentence box rule in each box, interval arithmetic against hand calculations); `test_analysis_api.py` (13: automatic analysis on import, stored provenance, idempotent re-run, pending vs all, no empty run after a duplicate-only import, run history, changed review re-scored, engine change forces a full re-run, **failed run rolls back and is recorded**, failure after import does not fail the import, CHECK constraint on `analysis_status`); `test_analytics_api.py` (28: every analytics endpoint asserted against the hand-calculated fixture in `backend/tests/fixtures/`, including overlapping vs separated intervals, low-sample flags, Monday-based weekly buckets with empty weeks kept, incomplete periods excluded via `as_of`, `insufficient_data` paths, monthly buckets, filter validation, synthetic data excluded by default).
+- Frontend (Vitest, **32 tests in total**): `AnalysisCard` (counts and honesty notes shown, button disabled when nothing is waiting, run sends the chosen scope and refreshes, error with retry).
+- Manual browser run (2026-11-24, built-in browser): Settings → Load demo data analysed 465 reviews automatically (450 analysed, 15 non-English); **Re-analyse all reviews** ran and the card showed the new run in local time. Live API checks on the demo data returned in about 0.2 s per call.
+- **Not covered, not claimed:** accuracy of VADER and of the aspect lexicon (needs the human-labelled sample, Phase 7); recall of keyword matching; behaviour on the real dataset; PostgreSQL.
+
 ## 1. Backend unit tests (pytest)
 
 | Area | Examples |
@@ -37,11 +43,12 @@ Status: In progress. Results of each run are recorded in `PROJECT_PROGRESS.md`.
 
 ## 2. Analytics validation (hand-calculated fixture)
 
-A small fixture (`backend/tests/fixtures/validation_reviews.csv`, ~20 reviews over 4 test properties and
-several months) with expected values worked out by hand in `backend/tests/fixtures/EXPECTED_RESULTS.md`:
-review counts, average rating (with a null rating present), rating distribution, sentiment percentages,
-aspect mention counts and splits, per-property comparison, monthly volumes. Tests assert API output equals
-these values exactly.
+A small fixture (`backend/tests/fixtures/validation_reviews.csv`, 21 invented reviews over 3 test properties
+and several weeks; the plan said ~20 over 4 properties) with expected values worked out by hand in
+`backend/tests/fixtures/EXPECTED_RESULTS.md`: review counts, average rating, rating distribution, sentiment
+shares, aspect mention counts and splits, per-property intervals and ranking, weekly series and trend changes. Tests
+assert API output equals these values. (A missing rating is not in the fixture; it has its own test,
+`test_reviews_without_a_rating_are_counted_as_missing_not_as_zero`.)
 
 ## 3. API / integration tests
 

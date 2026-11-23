@@ -121,7 +121,13 @@ Next.js 16.4, React 19.3, FastAPI 0.165, SQLAlchemy 2.1, Pydantic 2.14).
 | Database: all 12 tables, constraints, indexes, initial Alembic migration | Implemented (Phase 2) |
 | Frontend: app shell, responsive navigation, typed API client, live service status | Implemented (Phase 2) |
 | Ingestion: parsing, mapping, validation, de-duplication, import reports, undo, property aliases, synthetic demo data (API plus Data Import and Settings pages) | Implemented (Phase 3) |
-| NLP, analytics, insights, dashboard pages | Not started (Phases 4–6) |
+| Analysis: preprocessing, VADER sentiment, aspect lexicon, stored analysis runs (`app/analytics/nlp`, `app/services/analysis.py`), metrics and statistics (`app/analytics/metrics.py`, `stats.py`), analysis and analytics APIs, Settings "Text analysis" card | Implemented (Phase 4) |
+| Insights, dashboard pages | Not started (Phases 5–6) |
+
+Analysis flow: import commit (or demo load) → `analyse_after_import` → `run_analysis` writes sentiment rows, aspect
+mentions and review statuses in one transaction → analytics endpoints read the stored rows. Metrics are computed from
+stored results on request (fast enough at the current scale: about 0.2 s for 465 reviews); if volumes grow they can be
+cached or pre-aggregated without changing the API.
 
 ## Ingestion design (implemented in Phase 3)
 

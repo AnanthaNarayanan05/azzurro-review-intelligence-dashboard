@@ -31,6 +31,7 @@ export function DemoDataCard() {
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ["demo"] });
+    void queryClient.invalidateQueries({ queryKey: ["analysis"] });
     void queryClient.invalidateQueries({ queryKey: ["imports"] });
     void queryClient.invalidateQueries({ queryKey: propertiesQueryKey });
   };

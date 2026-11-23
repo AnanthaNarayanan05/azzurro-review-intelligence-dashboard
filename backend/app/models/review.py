@@ -17,7 +17,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, created_at_column
+from app.models.base import AnalysisStatus, Base, check_in, created_at_column
 
 
 class Review(Base):
@@ -41,6 +41,7 @@ class Review(Base):
             postgresql_where=text("external_review_id IS NOT NULL"),
         ),
         Index("ix_reviews_property_date", "property_id", "review_date"),
+        check_in("analysis_status", AnalysisStatus),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -69,6 +70,11 @@ class Review(Base):
     content_hash: Mapped[str] = mapped_column(String(64), unique=True)
     is_synthetic: Mapped[bool] = mapped_column(Boolean, default=False)
     source_url: Mapped[str | None] = mapped_column(Text)
+    # NLP bookkeeping. NULL status = not processed yet (or content changed since the last run).
+    analysis_status: Mapped[str | None] = mapped_column(String(16), index=True)
+    analysed_run_id: Mapped[int | None] = mapped_column(
+        ForeignKey("analysis_runs.id", ondelete="SET NULL")
+    )
     imported_at: Mapped[datetime] = created_at_column()
     # Set only when a later import changed this review's content (same external ID).
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

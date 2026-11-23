@@ -155,3 +155,37 @@ export interface DemoStatus {
 export interface RemovedResult {
   removed_reviews: number;
 }
+
+export type AnalysisScope = "pending" | "all";
+
+export interface AnalysisRun {
+  id: number;
+  triggered_by: string;
+  sentiment_engine: string;
+  aspect_lexicon_version: string;
+  status: string;
+  reviews_processed: number;
+  started_at: string;
+  completed_at: string | null;
+}
+
+export interface AnalysisStatus {
+  engine: string;
+  lexicon_version: string;
+  total_reviews: number;
+  analysed: number;
+  no_text: number;
+  non_english: number;
+  pending: number;
+  latest_run: AnalysisRun | null;
+  notes: string[];
+}
+
+export interface AnalysisRunResult {
+  run: AnalysisRun | null;
+  processed: number;
+  analysed: number;
+  no_text: number;
+  non_english: number;
+  aspect_mentions: number;
+}
