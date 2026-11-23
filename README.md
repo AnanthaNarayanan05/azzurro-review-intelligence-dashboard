@@ -4,8 +4,10 @@ An evidence-based review analytics platform that turns guest reviews for four ho
 measurable business intelligence: satisfaction KPIs, property comparison, aspect-level strengths and
 complaints, trends, and operational recommendations linked to the reviews that support them.
 
-> **Project status: Phase 1 – technical blueprint (awaiting approval).** No application code exists yet.
-> This README will be updated as features are actually implemented and verified.
+> **Project status: Phase 2 complete – application foundation.** The backend (FastAPI, database schema,
+> migrations, health check) and frontend shell (navigation, live service status) run and are tested.
+> Review import, analytics and dashboards are **not built yet** (Phases 3–6). This README is updated as
+> features are implemented and verified.
 
 ## Planned features
 
@@ -25,8 +27,11 @@ SQLite locally / PostgreSQL when hosted. See [docs/SYSTEM_ARCHITECTURE.md](docs/
 
 ## Technology stack
 
-Next.js · TypeScript · Tailwind CSS · shadcn/ui · Recharts · TanStack Query · Python 3.11 · FastAPI ·
-Pydantic · SQLAlchemy · Alembic · pandas · VADER (baseline) · pytest · Vitest · Playwright
+In use now: Next.js 16 · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui (Radix) · TanStack Query ·
+Python 3.11 · FastAPI · Pydantic 2 · SQLAlchemy 2.1 · Alembic · SQLite · pytest · Vitest · Testing Library.
+
+Planned for later phases: pandas/openpyxl (import), VADER (sentiment), Recharts (charts), Playwright (E2E),
+PostgreSQL (hosted).
 
 ## Documentation
 
@@ -50,9 +55,47 @@ Pydantic · SQLAlchemy · Alembic · pandas · VADER (baseline) · pytest · Vit
 - Real review files, uploads and local databases are git-ignored and never committed.
 - Any sample data in this repository is **synthetic**, is labelled as such, and is not real guest feedback.
 
-## Setup, running, testing, deployment
+## Quick start (local)
 
-To be documented once implemented (Phase 2 onwards). Planned steps are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+```powershell
+# Terminal 1 – backend (from the repository root)
+cd backend
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.venv\Scripts\python.exe -m alembic upgrade head
+.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+
+# Terminal 2 – frontend
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:3000. API docs: http://localhost:8000/docs. No `.env` file or API keys are needed
+for local development. Full instructions, configuration and troubleshooting (including a Windows
+Application Control workaround) are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+## Testing
+
+```powershell
+# from backend/  – 26 tests: API, errors, config, database integrity
+.venv\Scripts\python.exe -m pytest
+# from frontend/ – 15 tests: API client, status UI, navigation
+npm test
+```
+
+## Repository layout
+
+```
+backend/    FastAPI app (app/api, app/core, app/models, app/schemas), Alembic migrations, tests
+frontend/   Next.js App Router app (app/, components/, hooks/, lib/, services/, types/), tests
+docs/       Blueprint, requirements, architecture, schema, API, AI/NLP, roadmap, testing, risks, deployment
+data/       sample/ (synthetic, tracked) · raw/, processed/, uploads/ (private, git-ignored)
+```
+
+## Deployment
+
+Not deployed yet (Phase 8). See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Known limitations
 

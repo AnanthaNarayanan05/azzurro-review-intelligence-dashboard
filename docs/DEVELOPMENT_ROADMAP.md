@@ -2,6 +2,8 @@
 
 Each phase ends with: tests run → failures fixed → docs + `PROGRESS_LOG.md` updated → commit → push.
 
+**Status (2026-11-23):** Phase 1 complete (approved) · Phase 2 complete · Phase 3 next.
+
 | Phase | Goal | Key tasks | Depends on | Completion criteria | Planned commits |
 |---|---|---|---|---|---|
 | **1. Discovery & planning** | Approved blueprint | Inspect env, connect GitHub, requirements, architecture, schema, API, NLP method, risks, roadmap | – | Blueprint approved by project owner | `chore: initialise repository`, `docs: add phase 1 technical blueprint` |

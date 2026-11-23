@@ -15,10 +15,13 @@ Status: Proposed (Phase 1). The live, authoritative contract will be the generat
 - **Common analytics filters:** `property_ids` (comma-separated), `date_from`, `date_to` (ISO dates).
 - Dates ISO-8601; ratings on a 0–10 scale.
 
+**Implemented so far:** `GET /api/health` only (Phase 2). All other endpoints below are the agreed design and are
+not implemented yet.
+
 ## System
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/health` | Liveness + DB connectivity + configured sentiment engine + whether LLM is enabled |
+| GET | `/api/health` | **Implemented.** Returns `{data: {status, version, environment, database, database_backend, sentiment_engine, llm_enabled}}`; HTTP 200 when healthy, 503 with `status: "degraded"` when the database is unreachable |
 
 ## Properties
 | Method | Path | Description |

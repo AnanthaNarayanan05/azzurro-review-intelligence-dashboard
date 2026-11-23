@@ -1,6 +1,16 @@
 # Testing Plan
 
-Status: Plan (Phase 1). No tests exist yet. Results will be recorded in `PROGRESS_LOG.md` as they are run.
+Status: In progress. Results of each run are recorded in `PROGRESS_LOG.md`.
+
+**Implemented (Phase 2):**
+- Backend (pytest, 26 tests): health endpoint (ok and degraded), error envelope for 404/405/422/500 with no
+  internal details leaked, CORS allow/deny, OpenAPI served, settings parsing, and database integrity
+  (migration creates all tables, FK enforcement, rating/content CHECKs, unique codes/aliases/hashes, partial
+  unique external ID, controlled vocabularies, cascade on import delete, RESTRICT on property delete).
+- Frontend (Vitest + Testing Library, 15 tests): API client error mapping (envelope, network, non-JSON,
+  unreadable body), health 503 handling, status indicator states, status card retry, navigation (active page,
+  disabled unbuilt pages are not links).
+- Manual browser check: desktop and 375 px mobile layouts, mobile menu, backend-down error state and recovery.
 
 ## 1. Backend unit tests (pytest)
 

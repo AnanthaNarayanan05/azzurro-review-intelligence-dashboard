@@ -1,42 +1,110 @@
 # Deployment
 
-Status: **Not yet deployed. Nothing below has been executed yet** – this is the plan, to be replaced by
-verified instructions in Phases 2 and 8.
+Status: **Local development setup verified (Phase 2, 2026-11-23). Hosted deployment not done yet**
+(planned for Phase 8; nothing below the "Planned hosted deployment" heading has been executed).
 
-## Environment requirements (local)
+## Environment requirements
 
-- Python 3.11+ (developed on 3.11.9)
-- Node.js 20+ (developed on 24.x) and npm
-- Git
+| Tool | Version used | Notes |
+|---|---|---|
+| Python | 3.11.9 | 3.11+ required |
+| Node.js | 24.19 | Next.js 16 requires a current LTS; `@types/node` is pinned to v24 to match |
+| npm | 11.17 | |
+| Git | 2.55 | |
 
-## Planned local setup
+## Local setup (verified on Windows 11, PowerShell)
+
+All commands run from the repository root unless stated otherwise.
+
+### 1. Backend
 
 ```powershell
-# backend
 cd backend
 python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn app.main:app --reload --port 8000
+.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.venv\Scripts\python.exe -m alembic upgrade head
+.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+```
 
-# frontend (second terminal)
+- Creates the SQLite database at `data/processed/azzurro.db` (git-ignored).
+- API: http://localhost:8000/api/health · interactive docs: http://localhost:8000/docs
+- Tools are invoked as `python -m <tool>` rather than through `.venv\Scripts\*.exe` launchers – see Troubleshooting.
+
+### 2. Frontend (second terminal)
+
+```powershell
 cd frontend
 npm install
 npm run dev
 ```
 
-Configuration: copy `.env.example` to `.env` and adjust. No secrets are required for the default
-configuration (SQLite, VADER, LLM disabled).
+Open http://localhost:3000 – it redirects to `/overview`, and the header shows **Service connected**
+when the backend is reachable.
 
-## Planned hosted deployment (to be evaluated in Phase 8)
+### 3. Configuration
+
+- **Backend:** optional. Copy `.env.example` to `.env` in the repository root. Every setting has a safe
+  default (SQLite, VADER, LLM disabled); no secrets are needed for local development.
+- **Frontend:** optional. Copy `frontend/.env.example` to `frontend/.env.local` to point the UI at a
+  different API URL (default `http://localhost:8000`). The backend's `CORS_ORIGINS` must include the
+  frontend's origin.
+
+### 4. Checks
+
+```powershell
+# backend (from backend/)
+.venv\Scripts\python.exe -m pytest
+.venv\Scripts\python.exe -m ruff check .
+
+# frontend (from frontend/)
+npm test
+npm run typecheck
+npm run lint
+npm run build
+```
+
+## Database migrations
+
+- Schema changes are made in `backend/app/models`, then:
+  `python -m alembic revision --autogenerate -m "describe change"` → review the generated file →
+  `python -m alembic upgrade head`.
+- `python -m alembic check` confirms models and migrations are in sync.
+- Tests build a fresh database with the real migrations, so an incorrect migration fails the test suite.
+
+## Planned hosted deployment (Phase 8 – not yet done)
 
 - Frontend: Vercel (Next.js native hosting).
-- Backend: a Python host that supports FastAPI (candidates: Render, Railway, Fly.io) – choose after
-  checking current free-tier limits (sleep behaviour, memory for NLP dependencies).
+- Backend: a Python host that supports FastAPI (candidates: Render, Railway, Fly.io), chosen after checking
+  current free-tier limits (sleep behaviour, memory for NLP dependencies).
 - Database: managed PostgreSQL (candidates: Neon, Supabase) via `DATABASE_URL`.
 - Only synthetic data is deployed unless the project owner approves otherwise.
 
 ## Troubleshooting
 
-To be written from real issues encountered during setup and deployment.
+### `ImportError: DLL load failed ... An Application Control policy has blocked this file` (SQLAlchemy)
+
+Windows Smart App Control / Application Control may block SQLAlchemy's optional compiled (Cython)
+extensions. Do not disable the security policy; reinstall SQLAlchemy as pure Python instead (fully
+supported by SQLAlchemy, slightly slower, functionally identical):
+
+```powershell
+$env:DISABLE_SQLALCHEMY_CEXT = "1"
+.venv\Scripts\python.exe -m pip install --force-reinstall --no-deps --no-binary sqlalchemy sqlalchemy==2.1.9
+Remove-Item Env:DISABLE_SQLALCHEMY_CEXT
+```
+
+Verify with `python -c "from sqlalchemy.util._has_cython import HAS_CYEXTENSION; print(HAS_CYEXTENSION)"` → `False`.
+
+### `Permission denied` running `.venv\Scripts\pip.exe`, `alembic.exe`, `uvicorn.exe`
+
+The same policy can block the small `.exe` launcher scripts that pip generates. Run the tools as modules
+instead: `python -m pip`, `python -m alembic`, `python -m uvicorn`, `python -m pytest`.
+
+### Frontend shows "Service unreachable"
+
+The backend is not running, or it runs on a different URL/port than `NEXT_PUBLIC_API_BASE_URL`, or the
+frontend origin is missing from the backend's `CORS_ORIGINS`.
+
+### `npm run typecheck` reports errors in `.next/types/validator.ts` after deleting a page
+
+Those types are generated by Next.js. Run `npm run build` (or `npm run dev`) once to regenerate them.

@@ -90,7 +90,8 @@ template text is kept.
 | DB | SQLite (local) → PostgreSQL (hosted) | Zero-setup locally; durable managed storage when deployed |
 | Tests | pytest, httpx TestClient; Vitest + Testing Library; Playwright | Unit, API, component and end-to-end coverage |
 
-Note: the local Python is 3.11.9 and Node is 24.x; versions will be pinned in `requirements.txt` and `package.json`.
+Versions are pinned in `backend/requirements*.txt` and `frontend/package-lock.json` (Python 3.11.9, Node 24.x,
+Next.js 16.4, React 19.3, FastAPI 0.165, SQLAlchemy 2.1, Pydantic 2.14).
 
 ## 5. Design decisions
 
@@ -102,3 +103,21 @@ Note: the local Python is 3.11.9 and Node is 24.x; versions will be pinned in `r
 6. **No authentication initially** – not stated as an assessment requirement; to be confirmed. If a hosted demo needs protection, a minimal shared-secret / platform-level protection is preferred over a full user system.
 7. **Synchronous processing with FastAPI BackgroundTasks for large imports** – no message queue needed at this scale.
 8. **Guest names are not stored** even if present in an export (data minimisation).
+9. **Next.js Cache Components are enabled** (the Next.js 16 default). Pages render a static shell, and data
+   is fetched in the browser through TanStack Query, so the backend stays the only owner of data. Two rules follow:
+   - Components that read the URL (`usePathname`, `useSearchParams`) sit inside `<Suspense>` with a
+     URL-independent fallback.
+   - Components that render query data wait for `useHydrated()` before showing cached results. Page segments
+     can hydrate after another component has already filled the shared query cache, and rendering that data
+     during hydration would not match the server HTML.
+10. **Navigation is config-driven** (`frontend/lib/navigation.ts`). Pages not built yet are shown as disabled
+    items labelled with their roadmap phase, never as links to placeholder pages.
+
+## Implementation status
+
+| Component | Status |
+|---|---|
+| Backend: settings, DB session, error envelope, CORS, `/api/health` | Implemented (Phase 2) |
+| Database: all 12 tables, constraints, indexes, initial Alembic migration | Implemented (Phase 2) |
+| Frontend: app shell, responsive navigation, typed API client, live service status | Implemented (Phase 2) |
+| Ingestion, NLP, analytics, insights, dashboard pages | Not started (Phases 3–6) |
